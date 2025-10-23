@@ -34,6 +34,7 @@ document.addEventListener('DOMContentLoaded', function(){
   }
 
   // ===== FilePond Configuration =====
+  console.log('Checking FilePond...', window.FilePond ? 'LOADED' : 'NOT LOADED');
   if(window.FilePond){
     // Register plugins
     if(window.FilePondPluginFileValidateType) FilePond.registerPlugin(FilePondPluginFileValidateType);
@@ -43,7 +44,9 @@ document.addEventListener('DOMContentLoaded', function(){
 
     // Initialize FilePond for media_files input
     const mediaInput = document.querySelector('input[type=file][name=media_files]');
+    console.log('Media input found:', mediaInput ? 'YES' : 'NO');
     if(mediaInput){
+      console.log('Initializing FilePond...');
       const pond = FilePond.create(mediaInput, {
         allowMultiple: true,
         instantUpload: false,
