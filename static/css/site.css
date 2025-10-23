@@ -1,5 +1,15 @@
 /* Small site styles */
+:root{
+	--brand-dark: #0b3d91;
+	--brand-muted: #eef2ff;
+	--brand-accent: #ff6b6b;
+}
 body { background:#f8f9fa; }
 .container { max-width:960px; }
-img.avatar { max-width:240px; }
+.avatar { max-width:240px; }
 #mediaPreview img, #mediaPreview video { max-width:150px; margin-right:8px; margin-bottom:8px; }
+.filepond--root { max-width:100%; }
+.navbar .nav-link { color: rgba(255,255,255,0.9); }
+.navbar .nav-link:hover { color: #fff; }
+.form-label { font-weight:600; }
+.text-muted a { color:inherit; }

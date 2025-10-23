@@ -34,3 +34,14 @@ document.addEventListener('DOMContentLoaded', function(){
     });
   }
 });
+
+// FilePond initialization (if library loaded)
+if(window.FilePond){
+  // Turn all file inputs into FilePond instances with default settings
+  FilePond.parse(document.body);
+  // Example: set options globally
+  FilePond.setOptions({
+    allowMultiple: true,
+    instantUpload: false,
+  });
+}
