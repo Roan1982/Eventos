@@ -93,17 +93,9 @@
           </div>
         </div>
         
-        {% if user == event.creator or user.is_superuser %}
+        {% if user.is_authenticated %}
         <div class="ms-3">
-          <a class="btn btn-light mb-2 d-block" href="{{ event.get_absolute_url }}editar/">
-            <i class="fas fa-edit"></i> Editar
-          </a>
-          <a class="btn btn-outline-light d-block" href="{{ event.get_absolute_url }}eliminar/">
-            <i class="fas fa-trash"></i> Eliminar
-          </a>
-        </div>
-        {% elif user.is_authenticated %}
-        <div class="ms-3">
+          <!-- Botones de Favoritos y Calendario (para todos los usuarios autenticados) -->
           <a href="{% url 'events:toggle_favorite' event.slug %}" 
              class="btn {% if is_favorited %}btn-danger{% else %}btn-outline-danger{% endif %} mb-2 d-block favorite-toggle-btn">
             <i class="fas fa-heart"></i> 
@@ -114,10 +106,20 @@
             {% endif %}
           </a>
           <a href="{% url 'events:add_to_calendar' event.slug %}" 
-             class="btn btn-outline-light d-block"
+             class="btn btn-outline-light mb-2 d-block"
              title="Descargar evento para tu calendario">
             <i class="fas fa-calendar-plus"></i> Agregar al Calendario
           </a>
+          
+          <!-- Botones de Edición (solo para creador o admin) -->
+          {% if user == event.creator or user.is_superuser %}
+          <a class="btn btn-light mb-2 d-block" href="{{ event.get_absolute_url }}editar/">
+            <i class="fas fa-edit"></i> Editar
+          </a>
+          <a class="btn btn-outline-light d-block" href="{{ event.get_absolute_url }}eliminar/">
+            <i class="fas fa-trash"></i> Eliminar
+          </a>
+          {% endif %}
         </div>
         {% endif %}
       </div>
