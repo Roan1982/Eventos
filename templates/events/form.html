@@ -13,12 +13,20 @@
   </div>
   <div class="row">
     <div class="col-md-6 mb-3">
-      <label for="id_start_datetime" class="form-label">Inicio</label>
-      {{ form.start_datetime|add_class:'form-control' }}
+      <label for="id_start_date" class="form-label">Fecha inicio</label>
+      {{ form.start_date|add_class:'form-control' }}
     </div>
     <div class="col-md-6 mb-3">
-      <label for="id_end_datetime" class="form-label">Fin</label>
-      {{ form.end_datetime|add_class:'form-control' }}
+      <label for="id_start_time" class="form-label">Hora inicio</label>
+      {{ form.start_time|add_class:'form-control' }}
+    </div>
+    <div class="col-md-6 mb-3">
+      <label for="id_end_date" class="form-label">Fecha fin</label>
+      {{ form.end_date|add_class:'form-control' }}
+    </div>
+    <div class="col-md-6 mb-3">
+      <label for="id_end_time" class="form-label">Hora fin</label>
+      {{ form.end_time|add_class:'form-control' }}
     </div>
   </div>
   <div class="mb-3">
@@ -35,7 +43,7 @@
   </div>
   <div class="mb-3">
     <label for="id_media_files" class="form-label">Fotos/Videos</label>
-    {{ form.media_files|add_class:'form-control' }}
+    <input type="file" name="media_files" id="id_media_files" class="filepond" multiple />
     <div id="mediaPreview" class="mt-2"></div>
   </div>
   <button class="btn btn-primary">Guardar</button>

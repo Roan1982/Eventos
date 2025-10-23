@@ -1,4 +1,5 @@
 from django import forms
+import datetime
 from django.conf import settings
 from django.core.exceptions import ValidationError
 
@@ -10,17 +11,20 @@ class EventForm(forms.ModelForm):
     class MultiClearableFileInput(forms.ClearableFileInput):
         allow_multiple_selected = True
 
-    media_files = forms.FileField(widget=MultiClearableFileInput(attrs={'multiple': True}), required=False)
+    media_files = forms.FileField(widget=MultiClearableFileInput(attrs={'multiple': True, 'class': 'filepond'}), required=False)
+
+    # split date and time fields for start and end
+    start_date = forms.DateField(required=True, widget=forms.DateInput(attrs={'type': 'date'}))
+    start_time = forms.TimeField(required=True, widget=forms.TimeInput(attrs={'type': 'time'}))
+    end_date = forms.DateField(required=True, widget=forms.DateInput(attrs={'type': 'date'}))
+    end_time = forms.TimeField(required=True, widget=forms.TimeInput(attrs={'type': 'time'}))
 
     class Meta:
         model = Event
         fields = [
-            'title','description','category','start_datetime','end_datetime','price','venue_name','address','city','latitude','longitude','capacity','status','tags','featured'
+            'title','description','category','price','venue_name','address','city','latitude','longitude','capacity','status','tags','featured'
         ]
-        widgets = {
-            'start_datetime': forms.DateTimeInput(attrs={'type': 'datetime-local'}),
-            'end_datetime': forms.DateTimeInput(attrs={'type': 'datetime-local'}),
-        }
+        widgets = {}
 
     def clean_media_files(self):
         files = self.files.getlist('media_files')
@@ -31,17 +35,52 @@ class EventForm(forms.ModelForm):
                 raise ValidationError('Tipo de archivo no permitido.')
         return files
 
+    def clean(self):
+        cleaned = super().clean()
+        sd = cleaned.get('start_date')
+        st = cleaned.get('start_time')
+        ed = cleaned.get('end_date')
+        et = cleaned.get('end_time')
+        if sd and st:
+            cleaned['start_datetime'] = datetime.datetime.combine(sd, st)
+        if ed and et:
+            cleaned['end_datetime'] = datetime.datetime.combine(ed, et)
+        # ensure chronology
+        sdtime = cleaned.get('start_datetime')
+        edtime = cleaned.get('end_datetime')
+        if sdtime and edtime and sdtime > edtime:
+            raise ValidationError('La fecha/hora de inicio debe ser anterior a la de fin.')
+        return cleaned
+
     def save(self, commit=True):
-        instance = super().save(commit)
-        files = self.cleaned_data.get('clean_media_files', None)
+        # Save model instance, then create MediaBlob entries
+        instance = super().save(commit=False)
+        # set computed fields if present
+        sdtime = self.cleaned_data.get('start_datetime')
+        edtime = self.cleaned_data.get('end_datetime')
+        if sdtime:
+            instance.start_datetime = sdtime
+        if edtime:
+            instance.end_datetime = edtime
+        if commit:
+            instance.save()
+            # save M2M
+            try:
+                self.save_m2m()
+            except Exception:
+                pass
+        else:
+            # caller will save
+            pass
+
         files = self.files.getlist('media_files')
         for f in files:
             MediaBlob.objects.create(
                 event=instance,
                 content=f.read(),
-                content_type=f.content_type or 'application/octet-stream',
+                content_type=getattr(f, 'content_type', 'application/octet-stream'),
                 filename=f.name,
-                size=f.size,
+                size=getattr(f, 'size', None) or 0,
             )
         return instance
 

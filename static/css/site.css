@@ -13,3 +13,5 @@ body { background:#f8f9fa; }
 .navbar .nav-link:hover { color: #fff; }
 .form-label { font-weight:600; }
 .text-muted a { color:inherit; }
+.site-footer{ background:var(--brand-muted); position:relative; bottom:0; width:100%; }
+.page-wrapper{ min-height: calc(100vh - 80px); }
