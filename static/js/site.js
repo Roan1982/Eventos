@@ -48,21 +48,16 @@ document.addEventListener('DOMContentLoaded', function(){
     if(mediaInput){
       console.log('Initializing FilePond...');
       
-      // CRÍTICO: FilePond debe estar en modo que NO reemplace el input
-      // sino que sincronice los archivos con él
-      FilePond.setOptions({
-        allowMultiple: true,
-      });
-      
       const pond = FilePond.create(mediaInput, {
         allowMultiple: true,
         instantUpload: false,
-        storeAsFile: true,  // CRÍTICO: almacenar como File objects reales
+        storeAsFile: true,
         maxFileSize: '10MB',
         acceptedFileTypes: ['image/*', 'video/*'],
         maxFiles: 10,
         name: 'media_files',
         allowReorder: true,
+        credits: false,
         labelIdle: `
           <div class="filepond-label-wrapper">
             <i class="fas fa-cloud-upload-alt fa-3x mb-2"></i>
@@ -101,9 +96,30 @@ document.addEventListener('DOMContentLoaded', function(){
       // Debug: mostrar archivos cuando cambia FilePond
       pond.on('addfile', (error, file) => {
         if (!error) {
-          console.log('File added to FilePond:', file.filename);
+          console.log('File added to FilePond:', file.filename, 'File object:', file.file);
         }
       });
+      
+      // CRÍTICO: Asegurar que los archivos se envíen con el formulario
+      const form = mediaInput.closest('form');
+      if(form){
+        form.addEventListener('submit', function(e) {
+          console.log('Form submitting...');
+          console.log('FilePond files count:', pond.getFiles().length);
+          
+          // Obtener los archivos de FilePond
+          const files = pond.getFiles();
+          console.log('Files in FilePond:', files);
+          
+          if(files.length > 0){
+            // Crear un nuevo FormData para debug
+            const formData = new FormData(form);
+            const mediaFiles = formData.getAll('media_files');
+            console.log('media_files in FormData:', mediaFiles);
+            console.log('media_files count:', mediaFiles.length);
+          }
+        });
+      }
     }
   }
 
