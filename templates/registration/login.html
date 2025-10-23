@@ -1,9 +1,17 @@
 {% extends 'base.html' %}
+{% load form_tags from events.templatetags %}
 {% block content %}
 <h1>Ingresar</h1>
 <form method="post">{% csrf_token %}
-  {{ form.as_p }}
+  <div class="mb-3">
+    <label for="id_username" class="form-label">Usuario</label>
+    {{ form.username|add_class:'form-control' }}
+  </div>
+  <div class="mb-3">
+    <label for="id_password" class="form-label">Contraseña</label>
+    {{ form.password|add_class:'form-control' }}
+  </div>
   <button class="btn btn-primary">Entrar</button>
 </form>
-<p>¿No tienes cuenta? <a href="/accounts/signup/">Regístrate</a></p>
+<p class="mt-2">¿No tienes cuenta? <a href="/accounts/signup/">Regístrate</a></p>
 {% endblock %}

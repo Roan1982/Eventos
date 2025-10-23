@@ -5,6 +5,7 @@
   <meta property="og:type" content="event">
   <meta property="og:url" content="{{ request.build_absolute_uri }}">
 {% endblock %}
+{% load form_tags from events.templatetags %}
 {% block content %}
 <div class="d-flex justify-content-between align-items-center">
   <h1>{{ event.title }}</h1>
@@ -58,7 +59,18 @@
   </p>
   <form action="{% url 'events:contact_creator' event.slug %}" method="post" class="mt-2">
     {% csrf_token %}
-    {{ contact_form.as_p }}
+    <div class="mb-3">
+      <label for="id_name" class="form-label">Nombre</label>
+      {{ contact_form.name|add_class:'form-control' }}
+    </div>
+    <div class="mb-3">
+      <label for="id_email" class="form-label">Email</label>
+      {{ contact_form.email|add_class:'form-control' }}
+    </div>
+    <div class="mb-3">
+      <label for="id_message" class="form-label">Mensaje</label>
+      {{ contact_form.message|add_class:'form-control' }}
+    </div>
     <button class="btn btn-primary">Enviar mensaje</button>
   </form>
 {% else %}
@@ -82,7 +94,14 @@
 {% if user.is_authenticated %}
 <form action="{% url 'events:add_review' event.slug %}" method="post" class="mt-3">
   {% csrf_token %}
-  {{ review_form.as_p }}
+  <div class="mb-3">
+    <label for="id_rating" class="form-label">Puntuación</label>
+    {{ review_form.rating|add_class:'form-select' }}
+  </div>
+  <div class="mb-3">
+    <label for="id_comment" class="form-label">Comentario</label>
+    {{ review_form.comment|add_class:'form-control' }}
+  </div>
   <button class="btn btn-primary">Enviar reseña</button>
 </form>
 {% else %}

@@ -1,8 +1,25 @@
 {% extends 'base.html' %}
+{% load form_tags from events.templatetags %}
 {% block content %}
 <h1>Registro</h1>
 <form method="post">{% csrf_token %}
-  {{ form.as_p }}
+  {{ form.non_field_errors }}
+  <div class="mb-3">
+    <label for="id_username" class="form-label">Usuario</label>
+    {{ form.username|add_class:'form-control' }}
+  </div>
+  <div class="mb-3">
+    <label for="id_email" class="form-label">Email</label>
+    {{ form.email|add_class:'form-control' }}
+  </div>
+  <div class="mb-3">
+    <label for="id_password1" class="form-label">Contraseña</label>
+    {{ form.password1|add_class:'form-control' }}
+  </div>
+  <div class="mb-3">
+    <label for="id_password2" class="form-label">Confirmar contraseña</label>
+    {{ form.password2|add_class:'form-control' }}
+  </div>
   <button class="btn btn-primary">Crear cuenta</button>
 </form>
 {% endblock %}
