@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+{% block content %}
+<h1>Perfil</h1>
+<form method="post" enctype="multipart/form-data">{% csrf_token %}
+  {% if user.userprofile.avatar %}
+    <img src="{% url 'accounts:blob_serve' user.userprofile.avatar.id %}" class="rounded mb-2" style="max-width:120px;">
+  {% endif %}
+  {{ form.as_p }}
+  <div class="mb-3">
+    <label for="id_avatar_file">Avatar</label>
+    {{ form.avatar_file }}
+  </div>
+  <button class="btn btn-primary">Guardar</button>
+</form>
+{% endblock %}

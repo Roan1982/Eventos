@@ -1,0 +1,13 @@
+{% extends 'base.html' %}
+{% block content %}
+<h1>{% if form.instance.pk %}Editar evento{% else %}Crear evento{% endif %}</h1>
+<form method="post" enctype="multipart/form-data">
+  {% csrf_token %}
+  {{ form.as_p }}
+  <div class="mb-3">
+    <label for="id_media_files">Fotos/Videos</label>
+    {{ form.media_files }}
+  </div>
+  <button class="btn btn-primary">Guardar</button>
+</form>
+{% endblock %}

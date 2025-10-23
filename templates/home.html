@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+{% block content %}
+<h1>Eventos destacados</h1>
+<div class="row">
+  {% for e in featured %}
+  <div class="col-md-4">
+    <div class="card mb-3">
+      <div class="card-body">
+        <h5 class="card-title"><a href="{{ e.get_absolute_url }}">{{ e.title }}</a></h5>
+        <p class="card-text">{{ e.description|truncatechars:120 }}</p>
+      </div>
+    </div>
+  </div>
+  {% empty %}
+  <p>No hay eventos destacados.</p>
+  {% endfor %}
+</div>
+<h2>Recientes</h2>
+<div class="row">
+  {% for e in latest %}
+  <div class="col-md-4">
+    <div class="card mb-3">
+      <div class="card-body">
+        <h5 class="card-title"><a href="{{ e.get_absolute_url }}">{{ e.title }}</a></h5>
+        <p class="card-text">{{ e.description|truncatechars:120 }}</p>
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% endblock %}

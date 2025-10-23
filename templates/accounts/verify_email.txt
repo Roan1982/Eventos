@@ -1,0 +1,8 @@
+Hola {{ user.username }},
+
+Gracias por registrarte en la plataforma de eventos.
+
+Por favor verifica tu email haciendo clic en este enlace:
+{{ verify_url }}
+
+Si no solicitaste esta cuenta, ignora este mensaje.
