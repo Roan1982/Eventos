@@ -955,7 +955,7 @@ body {
 /* FilePond Custom Styles */
 .filepond--root {
   margin-bottom: 2rem;
-  max-height: 400px;
+  font-family: inherit;
 }
 
 .filepond--panel-root {
@@ -976,8 +976,76 @@ body {
 }
 
 .filepond--list-scroller {
-  max-height: 300px;
-  overflow-y: auto;
+  margin-top: 1rem;
+}
+
+/* FilePond Items with Image Preview */
+.filepond--item {
+  width: calc(50% - 0.5em);
+  margin: 0.25em;
+}
+
+@media (min-width: 768px) {
+  .filepond--item {
+    width: calc(33.333% - 0.5em);
+  }
+}
+
+@media (min-width: 1200px) {
+  .filepond--item {
+    width: calc(25% - 0.5em);
+  }
+}
+
+/* Image Preview Styling */
+.filepond--image-preview {
+  background-color: #f8f9fa;
+}
+
+.filepond--image-preview-wrapper {
+  border-radius: var(--radius-sm);
+}
+
+.filepond--image-preview-overlay {
+  background: linear-gradient(to bottom, rgba(0,0,0,0.1), rgba(0,0,0,0.3));
+}
+
+.filepond--item-panel {
+  background-color: white;
+  border-radius: var(--radius-sm);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.filepond--file-info {
+  font-size: 0.75rem;
+}
+
+.filepond--file-status {
+  font-size: 0.75rem;
+}
+
+/* FilePond Buttons */
+.filepond--action-remove-item,
+.filepond--action-revert-item-processing,
+.filepond--action-abort-item-load,
+.filepond--action-retry-item-load {
+  background-color: rgba(255, 255, 255, 0.9);
+  border-radius: 50%;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+  transition: all 0.2s ease;
+}
+
+.filepond--action-remove-item:hover {
+  background-color: rgba(220, 53, 69, 0.9);
+  transform: scale(1.1);
+}
+
+.filepond--drop-label {
+  color: var(--text-secondary);
+}
+
+.filepond--drop-label.filepond--drop-label label {
+  cursor: pointer;
 }
 
 /* Select2 Custom Styles */
@@ -1007,13 +1075,5 @@ body {
 
 .select2-container--bootstrap-5 .select2-results__option--highlighted {
   background-color: var(--brand-primary);
-}
-
-.filepond--drop-label {
-  color: var(--text-secondary);
-}
-
-.filepond--drop-label.filepond--drop-label label {
-  cursor: pointer;
 }
 

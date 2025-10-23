@@ -58,6 +58,13 @@ document.addEventListener('DOMContentLoaded', function(){
         name: 'media_files',
         allowReorder: true,
         credits: false,
+        // Image Preview settings
+        allowImagePreview: true,
+        imagePreviewHeight: 170,
+        imagePreviewMaxHeight: 256,
+        imagePreviewMinHeight: 100,
+        imagePreviewMaxFileSize: '10MB',
+        imagePreviewTransparencyIndicator: 'grid',
         labelIdle: `
           <div class="filepond-label-wrapper">
             <i class="fas fa-cloud-upload-alt fa-3x mb-2"></i>
@@ -82,44 +89,14 @@ document.addEventListener('DOMContentLoaded', function(){
         labelMaxFileSize: 'Tamaño máximo: {filesize}',
         labelFileTypeNotAllowed: 'Tipo de archivo no permitido',
         fileValidateTypeLabelExpectedTypes: 'Espera {allButLastType} o {lastType}',
-        imagePreviewHeight: 170,
-        imagePreviewMaxHeight: 256,
-        stylePanelLayout: 'compact circle',
+        stylePanelLayout: 'compact',
         styleLoadIndicatorPosition: 'center bottom',
         styleProgressIndicatorPosition: 'right bottom',
         styleButtonRemoveItemPosition: 'left bottom',
         styleButtonProcessItemPosition: 'right bottom',
       });
       
-      console.log('FilePond initialized with storeAsFile=true');
-      
-      // Debug: mostrar archivos cuando cambia FilePond
-      pond.on('addfile', (error, file) => {
-        if (!error) {
-          console.log('File added to FilePond:', file.filename, 'File object:', file.file);
-        }
-      });
-      
-      // CRÍTICO: Asegurar que los archivos se envíen con el formulario
-      const form = mediaInput.closest('form');
-      if(form){
-        form.addEventListener('submit', function(e) {
-          console.log('Form submitting...');
-          console.log('FilePond files count:', pond.getFiles().length);
-          
-          // Obtener los archivos de FilePond
-          const files = pond.getFiles();
-          console.log('Files in FilePond:', files);
-          
-          if(files.length > 0){
-            // Crear un nuevo FormData para debug
-            const formData = new FormData(form);
-            const mediaFiles = formData.getAll('media_files');
-            console.log('media_files in FormData:', mediaFiles);
-            console.log('media_files count:', mediaFiles.length);
-          }
-        });
-      }
+      console.log('FilePond initialized successfully with image preview');
     }
   }
 
