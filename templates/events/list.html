@@ -7,15 +7,15 @@
   <div class="col-md-2">
     <select name="price" class="form-select">
       <option value="">Precio</option>
-      <option value="free" {% if request.GET.price=='free' %}selected{% endif %}>Gratis</option>
-      <option value="paid" {% if request.GET.price=='paid' %}selected{% endif %}>Pago</option>
+  <option value="free" {% if request.GET.price == 'free' %}selected{% endif %}>Gratis</option>
+  <option value="paid" {% if request.GET.price == 'paid' %}selected{% endif %}>Pago</option>
     </select>
   </div>
   <div class="col-md-2">
     <select name="order" class="form-select">
       <option value="">Orden</option>
-      <option value="featured" {% if request.GET.order=='featured' %}selected{% endif %}>Destacados</option>
-      <option value="popular" {% if request.GET.order=='popular' %}selected{% endif %}>Populares</option>
+  <option value="featured" {% if request.GET.order == 'featured' %}selected{% endif %}>Destacados</option>
+  <option value="popular" {% if request.GET.order == 'popular' %}selected{% endif %}>Populares</option>
     </select>
   </div>
   <div class="col-md-2"><button class="btn btn-primary w-100" type="submit">Filtrar</button></div>
