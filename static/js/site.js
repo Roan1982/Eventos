@@ -290,4 +290,165 @@ document.addEventListener('DOMContentLoaded', function(){
   if(gallery){ 
     initGallery(gallery); 
   }
+
+  // ===== Leaflet Map for Event Location =====
+  const mapElement = document.getElementById('event-map');
+  if (mapElement && typeof L !== 'undefined') {
+    const address = mapElement.getAttribute('data-address');
+    const city = mapElement.getAttribute('data-city');
+    const venue = mapElement.getAttribute('data-venue');
+    
+    // Construir la query para Nominatim
+    const searchQuery = [address, city].filter(Boolean).join(', ');
+    
+    if (searchQuery) {
+      // Usar Nominatim para geocodificar la dirección
+      fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(searchQuery)}&limit=1`)
+        .then(response => response.json())
+        .then(data => {
+          if (data && data.length > 0) {
+            const lat = parseFloat(data[0].lat);
+            const lon = parseFloat(data[0].lon);
+            
+            // Crear el mapa
+            const map = L.map('event-map').setView([lat, lon], 15);
+            
+            // Agregar capa de OpenStreetMap
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+              attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+              maxZoom: 19
+            }).addTo(map);
+            
+            // Agregar marcador
+            const markerIcon = L.icon({
+              iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
+              shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
+              iconSize: [25, 41],
+              iconAnchor: [12, 41],
+              popupAnchor: [1, -34],
+              shadowSize: [41, 41]
+            });
+            
+            const marker = L.marker([lat, lon], { icon: markerIcon }).addTo(map);
+            
+            // Popup con información
+            const popupContent = `
+              <div style="text-align: center;">
+                <strong>${venue || 'Ubicación del Evento'}</strong><br>
+                ${address ? address + '<br>' : ''}
+                ${city}<br>
+                <a href="https://www.google.com/maps/dir/?api=1&destination=${lat},${lon}" 
+                   target="_blank" class="btn btn-sm btn-primary mt-2">
+                  <i class="fas fa-directions"></i> Cómo llegar
+                </a>
+              </div>
+            `;
+            marker.bindPopup(popupContent).openPopup();
+          } else {
+            // Si no se encuentra, mostrar mapa centrado en Argentina
+            mapElement.innerHTML = `
+              <div class="alert alert-warning mb-0">
+                <i class="fas fa-exclamation-triangle"></i> 
+                No se pudo geocodificar la dirección exacta. Por favor verifica la ubicación manualmente.
+                <br><strong>Dirección:</strong> ${searchQuery}
+              </div>
+            `;
+          }
+        })
+        .catch(error => {
+          console.error('Error al geocodificar:', error);
+          mapElement.innerHTML = `
+            <div class="alert alert-danger mb-0">
+              <i class="fas fa-times-circle"></i> 
+              Error al cargar el mapa. Por favor intenta más tarde.
+            </div>
+          `;
+        });
+    } else {
+      mapElement.innerHTML = `
+        <div class="alert alert-info mb-0">
+          <i class="fas fa-info-circle"></i> 
+          No hay información de ubicación disponible para este evento.
+        </div>
+      `;
+    }
+  }
+
+  // ===== Star Rating System =====
+  const starContainers = document.querySelectorAll('.star-rating');
+  starContainers.forEach(container => {
+    const isInteractive = container.classList.contains('interactive');
+    const ratingInput = document.getElementById('rating-value');
+    const stars = container.querySelectorAll('.star');
+    
+    if (isInteractive && ratingInput) {
+      // Interactive star rating (for form)
+      let currentRating = parseFloat(ratingInput.value) || 0;
+      
+      const updateStars = (rating) => {
+        stars.forEach((star, index) => {
+          const starValue = index + 1;
+          const halfValue = index + 0.5;
+          
+          star.classList.remove('full', 'half', 'empty');
+          
+          if (rating >= starValue) {
+            star.classList.add('full');
+          } else if (rating >= halfValue) {
+            star.classList.add('half');
+          } else {
+            star.classList.add('empty');
+          }
+        });
+      };
+      
+      stars.forEach((star, index) => {
+        // Click to select full star
+        star.addEventListener('click', (e) => {
+          const rect = star.getBoundingClientRect();
+          const clickX = e.clientX - rect.left;
+          const halfWidth = rect.width / 2;
+          
+          // If clicked on left half, set to .5, otherwise full star
+          if (clickX < halfWidth) {
+            currentRating = index + 0.5;
+          } else {
+            currentRating = index + 1;
+          }
+          
+          ratingInput.value = currentRating;
+          updateStars(currentRating);
+        });
+        
+        // Hover preview
+        star.addEventListener('mouseenter', () => {
+          updateStars(index + 1);
+        });
+      });
+      
+      container.addEventListener('mouseleave', () => {
+        updateStars(currentRating);
+      });
+      
+      // Initialize with current value
+      updateStars(currentRating);
+    } else {
+      // Display-only star rating
+      const rating = parseFloat(container.getAttribute('data-rating')) || 0;
+      stars.forEach((star, index) => {
+        const starValue = index + 1;
+        const halfValue = index + 0.5;
+        
+        star.classList.remove('full', 'half', 'empty');
+        
+        if (rating >= starValue) {
+          star.classList.add('full');
+        } else if (rating >= halfValue) {
+          star.classList.add('half');
+        } else {
+          star.classList.add('empty');
+        }
+      });
+    }
+  });
 });

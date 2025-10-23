@@ -102,6 +102,18 @@
             <i class="fas fa-trash"></i> Eliminar
           </a>
         </div>
+        {% elif user.is_authenticated %}
+        <div class="ms-3">
+          <a href="{% url 'events:toggle_favorite' event.slug %}" 
+             class="btn {% if is_favorited %}btn-danger{% else %}btn-outline-danger{% endif %} mb-2 d-block favorite-toggle-btn">
+            <i class="fas fa-heart"></i> 
+            {% if is_favorited %}
+              En Favoritos
+            {% else %}
+              Agregar a Favoritos
+            {% endif %}
+          </a>
+        </div>
         {% endif %}
       </div>
     </div>
@@ -124,6 +136,39 @@
           </div>
         </div>
       </div>
+      
+      <!-- Mapa de Ubicación -->
+      {% if event.address or event.city %}
+      <div class="card mb-4">
+        <div class="card-body">
+          <h3 class="card-title">
+            <i class="fas fa-map-marked-alt text-primary"></i> Ubicación del Evento
+          </h3>
+          <div class="mb-3">
+            <p class="mb-1">
+              <i class="fas fa-map-marker-alt text-danger"></i> 
+              <strong>{{ event.venue_name|default:"Sin nombre de lugar" }}</strong>
+            </p>
+            {% if event.address %}
+            <p class="mb-1 text-muted">
+              <i class="fas fa-road"></i> {{ event.address }}
+            </p>
+            {% endif %}
+            <p class="mb-0 text-muted">
+              <i class="fas fa-city"></i> {{ event.city }}
+            </p>
+          </div>
+          <div id="event-map" style="height: 400px; border-radius: 0.5rem;" 
+               data-address="{{ event.address|default:'' }}" 
+               data-city="{{ event.city }}"
+               data-venue="{{ event.venue_name|default:'' }}">
+          </div>
+          <small class="text-muted d-block mt-2">
+            <i class="fas fa-info-circle"></i> Mapa aproximado basado en la dirección proporcionada
+          </small>
+        </div>
+      </div>
+      {% endif %}
       
       <!-- Galería de Media -->
       {% with media_list=media_list %}
@@ -185,13 +230,24 @@
             <h3 class="card-title mb-0">
               <i class="fas fa-star text-warning"></i> Reseñas
             </h3>
-            {% if avg_rating %}
-            <span class="badge bg-warning text-dark fs-6">
-              <i class="fas fa-star"></i> {{ avg_rating|floatformat:1 }} / 5.0
-              <small class="ms-1">({{ review_count }} reseñas)</small>
-            </span>
-            {% endif %}
           </div>
+          
+          <!-- Promedio de calificaciones -->
+          {% if avg_rating %}
+          <div class="avg-rating-container">
+            <div class="avg-rating-number">{{ avg_rating|floatformat:1 }}</div>
+            <div>
+              <div class="star-rating avg-rating-stars" data-rating="{{ avg_rating }}">
+                <span class="star"></span>
+                <span class="star"></span>
+                <span class="star"></span>
+                <span class="star"></span>
+                <span class="star"></span>
+              </div>
+              <div class="avg-rating-count">{{ review_count }} reseña{{ review_count|pluralize }}</div>
+            </div>
+          </div>
+          {% endif %}
           
           <!-- Lista de reseñas -->
           <div class="reviews-list mb-4">
@@ -202,23 +258,27 @@
                   <strong class="text-primary">
                     <i class="fas fa-user-circle"></i> {{ r.user.username }}
                   </strong>
-                  <div class="text-warning">
-                    {% for i in "12345"|make_list %}
-                      {% if forloop.counter <= r.rating %}
-                        <i class="fas fa-star"></i>
-                      {% else %}
-                        <i class="far fa-star"></i>
-                      {% endif %}
-                    {% endfor %}
+                  <div class="star-rating review-stars" data-rating="{{ r.rating }}">
+                    <span class="star"></span>
+                    <span class="star"></span>
+                    <span class="star"></span>
+                    <span class="star"></span>
+                    <span class="star"></span>
                   </div>
+                  <small class="text-muted">
+                    <i class="fas fa-clock"></i> {{ r.created_at|date:"d/m/Y H:i" }}
+                  </small>
                 </div>
-                {% if user.is_superuser or user == event.creator %}
-                <a class="btn btn-sm btn-outline-danger" href="{% url 'events:delete_review' r.id %}">
+                {% if user.is_staff or user.is_superuser %}
+                <a class="btn btn-sm btn-outline-danger" href="{% url 'events:delete_review' r.id %}" 
+                   onclick="return confirm('¿Eliminar esta reseña?')">
                   <i class="fas fa-trash"></i>
                 </a>
                 {% endif %}
               </div>
+              {% if r.comment %}
               <p class="mb-0">{{ r.comment }}</p>
+              {% endif %}
             </div>
             {% empty %}
             <div class="alert alert-info text-center">
@@ -234,21 +294,29 @@
             <h5 class="mb-3"><i class="fas fa-pen"></i> Deja tu reseña</h5>
             <form action="{% url 'events:add_review' event.slug %}" method="post">
               {% csrf_token %}
-              <div class="row">
-                <div class="col-md-4 mb-3">
-                  <label for="id_rating" class="form-label">
-                    <i class="fas fa-star text-warning"></i> Puntuación
-                  </label>
-                  {{ review_form.rating|add_class:'form-select' }}
+              
+              <!-- Star Rating Input -->
+              <div class="review-form-stars">
+                <label><i class="fas fa-star text-warning"></i> Tu Calificación</label>
+                <div class="star-rating interactive">
+                  <span class="star"></span>
+                  <span class="star"></span>
+                  <span class="star"></span>
+                  <span class="star"></span>
+                  <span class="star"></span>
                 </div>
-                <div class="col-md-8 mb-3">
-                  <label for="id_comment" class="form-label">
-                    <i class="fas fa-comment"></i> Comentario
-                  </label>
-                  {{ review_form.comment|add_class:'form-control' }}
-                </div>
+                {{ review_form.rating }}
+                <small class="d-block mt-2 text-muted">Haz clic en las estrellas para calificar (puedes dar medias estrellas)</small>
               </div>
-              <button class="btn btn-primary">
+              
+              <div class="mb-3">
+                <label for="id_comment" class="form-label">
+                  <i class="fas fa-comment"></i> Comentario (opcional)
+                </label>
+                {{ review_form.comment }}
+              </div>
+              
+              <button type="submit" class="btn btn-primary">
                 <i class="fas fa-paper-plane"></i> Enviar Reseña
               </button>
             </form>

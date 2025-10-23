@@ -1,0 +1,148 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="page-header mb-4">
+  <h1 class="display-4">
+    <i class="fas fa-heart text-danger"></i> Mis Favoritos
+  </h1>
+  <p class="lead text-muted">
+    {% if favorite_count %}
+      Tienes {{ favorite_count }} evento{{ favorite_count|pluralize }} en favoritos
+    {% else %}
+      No tienes eventos favoritos todavía
+    {% endif %}
+  </p>
+</div>
+
+{% if favorites %}
+<div class="row g-4">
+  {% for fav in favorites %}
+  <div class="col-12 col-md-6 col-lg-4">
+    <div class="card h-100 event-card">
+      <!-- Event Image -->
+      <div class="event-card-image">
+        {% if fav.event.cover_media %}
+          <img src="{% url 'events:media_blob' fav.event.cover_media.id %}" 
+               alt="{{ fav.event.title }}" class="card-img-top">
+        {% elif fav.event.media.first %}
+          <img src="{% url 'events:media_blob' fav.event.media.first.id %}" 
+               alt="{{ fav.event.title }}" class="card-img-top">
+        {% else %}
+          <div class="event-placeholder">
+            <i class="fas fa-image fa-3x"></i>
+          </div>
+        {% endif %}
+        
+        <!-- Category Badge -->
+        {% if fav.event.category %}
+        <span class="event-category-badge">
+          <i class="{{ fav.event.category.icon|default:'fas fa-tag' }}"></i>
+          {{ fav.event.category.name }}
+        </span>
+        {% endif %}
+        
+        <!-- Favorite Button (filled) -->
+        <a href="{% url 'events:toggle_favorite' fav.event.slug %}" 
+           class="favorite-btn favorited" 
+           title="Quitar de favoritos">
+          <i class="fas fa-heart"></i>
+        </a>
+      </div>
+      
+      <!-- Event Info -->
+      <div class="card-body">
+        <h5 class="card-title">
+          <a href="{% url 'events:detail' fav.event.slug %}" class="text-decoration-none text-dark">
+            {{ fav.event.title }}
+          </a>
+        </h5>
+        
+        <div class="event-meta mb-3">
+          <small class="text-muted d-block mb-1">
+            <i class="fas fa-calendar"></i> 
+            {{ fav.event.start_datetime|date:"d M, Y" }}
+          </small>
+          <small class="text-muted d-block mb-1">
+            <i class="fas fa-map-marker-alt"></i> 
+            {{ fav.event.city }}
+          </small>
+          {% if fav.event.price %}
+          <small class="text-muted d-block">
+            <i class="fas fa-ticket-alt"></i> 
+            ${{ fav.event.price }}
+          </small>
+          {% else %}
+          <small class="text-success d-block">
+            <i class="fas fa-gift"></i> 
+            Gratis
+          </small>
+          {% endif %}
+        </div>
+        
+        <p class="card-text text-muted small">
+          {{ fav.event.description|truncatewords:20 }}
+        </p>
+      </div>
+      
+      <div class="card-footer bg-transparent border-top-0">
+        <div class="d-flex justify-content-between align-items-center">
+          <small class="text-muted">
+            <i class="fas fa-clock"></i> Agregado {{ fav.created_at|timesince }} atrás
+          </small>
+          <a href="{% url 'events:detail' fav.event.slug %}" class="btn btn-sm btn-primary">
+            Ver Detalles <i class="fas fa-arrow-right"></i>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+
+<!-- Pagination -->
+{% if is_paginated %}
+<nav aria-label="Paginación de favoritos" class="mt-4">
+  <ul class="pagination justify-content-center">
+    {% if page_obj.has_previous %}
+      <li class="page-item">
+        <a class="page-link" href="?page=1">Primera</a>
+      </li>
+      <li class="page-item">
+        <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Anterior</a>
+      </li>
+    {% endif %}
+    
+    <li class="page-item active">
+      <span class="page-link">
+        Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}
+      </span>
+    </li>
+    
+    {% if page_obj.has_next %}
+      <li class="page-item">
+        <a class="page-link" href="?page={{ page_obj.next_page_number }}">Siguiente</a>
+      </li>
+      <li class="page-item">
+        <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">Última</a>
+      </li>
+    {% endif %}
+  </ul>
+</nav>
+{% endif %}
+
+{% else %}
+<!-- Empty State -->
+<div class="text-center py-5">
+  <i class="fas fa-heart-broken fa-5x text-muted mb-4"></i>
+  <h3 class="text-muted">No tienes eventos favoritos</h3>
+  <p class="text-muted mb-4">
+    Explora eventos y haz clic en el corazón <i class="fas fa-heart text-danger"></i> para agregarlos a favoritos
+  </p>
+  <a href="{% url 'events:list' %}" class="btn btn-primary btn-lg">
+    <i class="fas fa-search"></i> Explorar Eventos
+  </a>
+</div>
+{% endif %}
+
+{% endblock %}

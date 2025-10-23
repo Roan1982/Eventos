@@ -183,9 +183,24 @@ class EventForm(forms.ModelForm):
         return instance
 
 class ReviewForm(forms.ModelForm):
+    rating = forms.DecimalField(
+        min_value=0.5,
+        max_value=5.0,
+        decimal_places=1,
+        widget=forms.HiddenInput(attrs={'id': 'rating-value'}),
+        label='Calificación'
+    )
+    
     class Meta:
         model = Review
         fields = ['rating', 'comment']
+        widgets = {
+            'comment': forms.Textarea(attrs={
+                'class': 'form-control',
+                'rows': 4,
+                'placeholder': 'Comparte tu experiencia sobre este evento...'
+            })
+        }
 
 class ContactForm(forms.ModelForm):
     class Meta:

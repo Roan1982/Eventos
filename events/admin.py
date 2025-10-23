@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Category, Tag, Event, MediaBlob, Review, ContactMessage
+from .models import Category, Tag, Event, MediaBlob, Review, ContactMessage, Favorite
 
 @admin.register(Category)
 class CategoryAdmin(admin.ModelAdmin):
@@ -31,3 +31,9 @@ class ReviewAdmin(admin.ModelAdmin):
 @admin.register(ContactMessage)
 class ContactMessageAdmin(admin.ModelAdmin):
     list_display = ('event', 'name', 'email', 'created_at')
+
+@admin.register(Favorite)
+class FavoriteAdmin(admin.ModelAdmin):
+    list_display = ('user', 'event', 'created_at')
+    list_filter = ('created_at',)
+    search_fields = ('user__username', 'event__title')

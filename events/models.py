@@ -113,7 +113,12 @@ class MediaBlob(models.Model):
 class Review(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name='reviews')
-    rating = models.IntegerField(validators=[MinValueValidator(1), MaxValueValidator(5)])
+    rating = models.DecimalField(
+        max_digits=2, 
+        decimal_places=1,
+        validators=[MinValueValidator(0.5), MaxValueValidator(5.0)],
+        help_text="Rating de 0.5 a 5.0 estrellas (incrementos de 0.5)"
+    )
     comment = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -122,7 +127,7 @@ class Review(models.Model):
         ordering = ['-created_at']
 
     def __str__(self):
-        return f"{self.event} - {self.rating}"
+        return f"{self.event} - {self.rating} estrellas"
 
 class ContactMessage(models.Model):
     event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name='messages')
@@ -133,3 +138,18 @@ class ContactMessage(models.Model):
 
     def __str__(self):
         return f"Mensaje para {self.event.title} de {self.name}"
+
+class Favorite(models.Model):
+    """Modelo para guardar eventos favoritos de usuarios"""
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='favorites')
+    event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name='favorited_by')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('user', 'event')
+        ordering = ['-created_at']
+        verbose_name = 'Favorito'
+        verbose_name_plural = 'Favoritos'
+
+    def __str__(self):
+        return f"{self.user.username} ❤ {self.event.title}"

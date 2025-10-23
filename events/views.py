@@ -8,7 +8,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse_lazy
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView, TemplateView
 
-from .models import Event, Category, Tag, MediaBlob, Review
+from .models import Event, Category, Tag, MediaBlob, Review, Favorite
 from .forms import EventForm, ReviewForm, ContactForm
 
 class HomeView(TemplateView):
@@ -103,6 +103,16 @@ class EventDetailView(DetailView):
         ctx['contact_form'] = ContactForm()
         ctx['avg_rating'] = self.object.reviews.aggregate(Avg('rating'))['rating__avg'] or 0
         ctx['review_count'] = self.object.reviews.count()
+        
+        # Check if user has favorited this event
+        if self.request.user.is_authenticated:
+            ctx['is_favorited'] = Favorite.objects.filter(
+                user=self.request.user, 
+                event=self.object
+            ).exists()
+        else:
+            ctx['is_favorited'] = False
+        
         # Provide ordered media list
         try:
             ctx['media_list'] = self.object.media.all().order_by('display_order', '-size')
@@ -194,23 +204,41 @@ class EventDeleteView(LoginRequiredMixin, CreatorOrAdminMixin, DeleteView):
 @login_required
 def add_review(request, slug):
     event = get_object_or_404(Event, slug=slug)
+    
+    # Verificar si el usuario ya tiene una reseña
+    existing_review = Review.objects.filter(user=request.user, event=event).first()
+    
     form = ReviewForm(request.POST)
     if form.is_valid():
-        Review.objects.update_or_create(
-            user=request.user, event=event,
-            defaults={'rating': form.cleaned_data['rating'], 'comment': form.cleaned_data['comment']}
-        )
-        messages.success(request, 'Reseña guardada')
+        if existing_review:
+            # Actualizar reseña existente
+            existing_review.rating = form.cleaned_data['rating']
+            existing_review.comment = form.cleaned_data['comment']
+            existing_review.save()
+            messages.info(request, 'Tu reseña ha sido actualizada')
+        else:
+            # Crear nueva reseña
+            Review.objects.create(
+                user=request.user,
+                event=event,
+                rating=form.cleaned_data['rating'],
+                comment=form.cleaned_data['comment']
+            )
+            messages.success(request, 'Reseña guardada exitosamente')
+    else:
+        messages.error(request, 'Error al guardar la reseña. Verifica los datos.')
+    
     return redirect(event.get_absolute_url())
 
 @login_required
 def delete_review(request, pk):
     review = get_object_or_404(Review, pk=pk)
-    if request.user.is_superuser or review.event.creator == request.user:
+    # Solo staff/superuser pueden eliminar reseñas
+    if request.user.is_staff or request.user.is_superuser:
         review.delete()
         messages.success(request, 'Reseña eliminada')
     else:
-        messages.error(request, 'No autorizado')
+        messages.error(request, 'No tienes permisos para eliminar reseñas')
     return redirect(review.event.get_absolute_url())
 
 def media_blob_serve(request, pk):
@@ -230,3 +258,38 @@ def contact_creator(request, slug):
         msg.save()
         messages.success(request, 'Mensaje enviado (revisa la consola de emails en dev).')
     return redirect(event.get_absolute_url())
+
+# ===== Favorites Views =====
+@login_required
+def toggle_favorite(request, slug):
+    """Toggle favorite status for an event"""
+    event = get_object_or_404(Event, slug=slug)
+    favorite, created = Favorite.objects.get_or_create(user=request.user, event=event)
+    
+    if not created:
+        # Ya existía, entonces lo eliminamos (unfavorite)
+        favorite.delete()
+        messages.info(request, f'"{event.title}" eliminado de favoritos')
+    else:
+        # Se creó nuevo (favorite)
+        messages.success(request, f'"{event.title}" agregado a favoritos ❤')
+    
+    # Redirect to the referrer or event detail
+    return redirect(request.META.get('HTTP_REFERER', event.get_absolute_url()))
+
+class FavoriteListView(LoginRequiredMixin, ListView):
+    """Lista de eventos favoritos del usuario"""
+    model = Favorite
+    template_name = 'events/favorites.html'
+    context_object_name = 'favorites'
+    paginate_by = 12
+
+    def get_queryset(self):
+        return Favorite.objects.filter(user=self.request.user).select_related(
+            'event__category', 'event__cover_media'
+        ).prefetch_related('event__media')
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx['favorite_count'] = self.get_queryset().count()
+        return ctx
