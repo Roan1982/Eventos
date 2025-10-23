@@ -1,3 +1,7 @@
 Django>=4.2,<5.0
 djangorestframework>=3.14,<3.15
 Pillow>=10.0.0,<11.0.0
+
+# WSGI server and Postgres driver for Docker deployment
+gunicorn>=20.1.0
+psycopg2-binary>=2.9
