@@ -53,6 +53,10 @@ document.addEventListener('DOMContentLoaded', function(){
         maxFileSize: '10MB',
         acceptedFileTypes: ['image/*', 'video/*'],
         maxFiles: 10,
+        // CRÍTICO: mantener el nombre del input original
+        name: 'media_files',
+        // Permitir múltiples archivos con el mismo nombre
+        allowMultiple: true,
         labelIdle: `
           <div class="filepond-label-wrapper">
             <i class="fas fa-cloud-upload-alt fa-3x mb-2"></i>
@@ -85,6 +89,8 @@ document.addEventListener('DOMContentLoaded', function(){
         styleButtonRemoveItemPosition: 'left bottom',
         styleButtonProcessItemPosition: 'right bottom',
       });
+      
+      console.log('FilePond initialized successfully. Files will be submitted with form.');
     }
   }
 
