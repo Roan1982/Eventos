@@ -1,5 +1,6 @@
 from django.db import migrations, models
 import django.db.models.deletion
+from django.conf import settings
 
 CATEGORIES = [
     'Música','Arte','Deporte','Aire libre','Tecnología','Gastronomía','Cine','Teatro','Literatura','Educación','Ferias','Infantil','Moda','Bienestar','Otros'
@@ -14,7 +15,9 @@ class Migration(migrations.Migration):
 
     initial = True
 
-    dependencies = []
+    dependencies = [
+        migrations.swappable_dependency(settings.AUTH_USER_MODEL),
+    ]
 
     operations = [
         migrations.CreateModel(
@@ -75,6 +78,7 @@ class Migration(migrations.Migration):
             name='Review',
             fields=[
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('user', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL)),
                 ('rating', models.IntegerField()),
                 ('comment', models.TextField(blank=True)),
                 ('created_at', models.DateTimeField(auto_now_add=True)),
