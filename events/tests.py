@@ -8,7 +8,7 @@ import io
 class EventTests(TestCase):
     def setUp(self):
         self.user = User.objects.create_user('user', 'user@example.com', 'pass')
-        self.cat = Category.objects.create(name='Tecnología', slug='tecnologia')
+        self.cat, _ = Category.objects.get_or_create(name='Tecnología', defaults={'slug': 'tecnologia'})
 
     def test_create_event(self):
         e = Event.objects.create(
