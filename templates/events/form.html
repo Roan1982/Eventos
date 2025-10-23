@@ -1,12 +1,42 @@
 {% extends 'base.html' %}
+{% load form_tags from events.templatetags %}
 {% block content %}
 <h1>{% if form.instance.pk %}Editar evento{% else %}Crear evento{% endif %}</h1>
-<form method="post" enctype="multipart/form-data">
-  {% csrf_token %}
-  {{ form.as_p }}
+<form method="post" enctype="multipart/form-data">{% csrf_token %}
   <div class="mb-3">
-    <label for="id_media_files">Fotos/Videos</label>
-    {{ form.media_files }}
+    <label for="id_title" class="form-label">Título</label>
+    {{ form.title|add_class:'form-control' }}
+  </div>
+  <div class="mb-3">
+    <label for="id_description" class="form-label">Descripción</label>
+    {{ form.description|add_class:'form-control' }}
+  </div>
+  <div class="row">
+    <div class="col-md-6 mb-3">
+      <label for="id_start_datetime" class="form-label">Inicio</label>
+      {{ form.start_datetime|add_class:'form-control' }}
+    </div>
+    <div class="col-md-6 mb-3">
+      <label for="id_end_datetime" class="form-label">Fin</label>
+      {{ form.end_datetime|add_class:'form-control' }}
+    </div>
+  </div>
+  <div class="mb-3">
+    <label for="id_category" class="form-label">Categoría</label>
+    {{ form.category|add_class:'form-select' }}
+  </div>
+  <div class="mb-3">
+    <label for="id_price" class="form-label">Precio</label>
+    {{ form.price|add_class:'form-control' }}
+  </div>
+  <div class="mb-3">
+    <label for="id_venue_name" class="form-label">Lugar</label>
+    {{ form.venue_name|add_class:'form-control' }}
+  </div>
+  <div class="mb-3">
+    <label for="id_media_files" class="form-label">Fotos/Videos</label>
+    {{ form.media_files|add_class:'form-control' }}
+    <div id="mediaPreview" class="mt-2"></div>
   </div>
   <button class="btn btn-primary">Guardar</button>
 </form>

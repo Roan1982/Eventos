@@ -1,15 +1,39 @@
 {% extends 'base.html' %}
+{% load form_tags from events.templatetags %}
 {% block content %}
 <h1>Perfil</h1>
 <form method="post" enctype="multipart/form-data">{% csrf_token %}
-  {% if user.userprofile.avatar %}
-    <img src="{% url 'accounts:blob_serve' user.userprofile.avatar.id %}" class="rounded mb-2" style="max-width:120px;">
-  {% endif %}
-  {{ form.as_p }}
-  <div class="mb-3">
-    <label for="id_avatar_file">Avatar</label>
-    {{ form.avatar_file }}
+  <div class="row">
+    <div class="col-md-4">
+      {% if user.userprofile.avatar %}
+        <img id="avatarPreview" src="{% url 'accounts:blob_serve' user.userprofile.avatar.id %}" class="rounded mb-2 img-fluid" style="max-width:240px;">
+      {% else %}
+        <img id="avatarPreview" src="" class="rounded mb-2 img-fluid d-none" style="max-width:240px;">
+      {% endif %}
+    </div>
+    <div class="col-md-8">
+      <div class="mb-3">
+        <label for="id_first_name" class="form-label">Nombre</label>
+        {{ form.first_name|add_class:'form-control' }}
+      </div>
+      <div class="mb-3">
+        <label for="id_last_name" class="form-label">Apellido</label>
+        {{ form.last_name|add_class:'form-control' }}
+      </div>
+      <div class="mb-3">
+        <label for="id_phone" class="form-label">Teléfono</label>
+        {{ form.phone|add_class:'form-control' }}
+      </div>
+      <div class="mb-3">
+        <label for="id_bio" class="form-label">Bio</label>
+        {{ form.bio|add_class:'form-control' }}
+      </div>
+      <div class="mb-3">
+        <label for="id_avatar_file" class="form-label">Avatar</label>
+        {{ form.avatar_file|add_class:'form-control' }}
+      </div>
+      <button class="btn btn-primary">Guardar</button>
+    </div>
   </div>
-  <button class="btn btn-primary">Guardar</button>
 </form>
 {% endblock %}

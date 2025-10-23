@@ -1,0 +1,5 @@
+/* Small site styles */
+body { background:#f8f9fa; }
+.container { max-width:960px; }
+img.avatar { max-width:240px; }
+#mediaPreview img, #mediaPreview video { max-width:150px; margin-right:8px; margin-bottom:8px; }
