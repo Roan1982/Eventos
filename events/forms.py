@@ -97,6 +97,12 @@ class EventForm(forms.ModelForm):
     def clean_media_files(self):
         files = self.files.getlist('media_files') or self.files.getlist('media_files[]') or []
         fd = self.cleaned_data.get('media_files')
+        
+        # DEBUG
+        print(f"DEBUG clean_media_files - self.files.keys(): {list(self.files.keys())}")
+        print(f"DEBUG clean_media_files - files: {files}")
+        print(f"DEBUG clean_media_files - fd: {fd}")
+        
         if fd and isinstance(fd, list):
             files = fd
         # Validate each file

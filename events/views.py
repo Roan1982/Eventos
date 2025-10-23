@@ -128,6 +128,12 @@ class EventCreateView(LoginRequiredMixin, CreateView):
     def form_valid(self, form):
         # Save the instance first so we have a PK to attach MediaBlob rows to.
         form.instance.creator = self.request.user
+        
+        # DEBUG: ver qué archivos llegan
+        print(f"DEBUG FILES: {self.request.FILES}")
+        print(f"DEBUG FILES keys: {list(self.request.FILES.keys())}")
+        print(f"DEBUG media_files: {self.request.FILES.getlist('media_files')}")
+        
         # Let the form.save() handle saving instance, computed fields and MediaBlob rows.
         instance = form.save(commit=True)
         messages.success(self.request, 'Evento creado')
