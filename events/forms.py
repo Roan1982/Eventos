@@ -5,7 +5,12 @@ from django.core.exceptions import ValidationError
 from .models import Event, Review, ContactMessage, MediaBlob, Tag
 
 class EventForm(forms.ModelForm):
-    media_files = forms.FileField(widget=forms.ClearableFileInput(attrs={'multiple': True}), required=False)
+    # ClearableFileInput doesn't support multiple by default in some Django versions.
+    # Create a small subclass that enables multiple selection and use it.
+    class MultiClearableFileInput(forms.ClearableFileInput):
+        allow_multiple_selected = True
+
+    media_files = forms.FileField(widget=MultiClearableFileInput(attrs={'multiple': True}), required=False)
 
     class Meta:
         model = Event
