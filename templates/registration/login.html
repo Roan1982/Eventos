@@ -1,17 +1,53 @@
 {% extends 'base.html' %}
 {% load form_tags %}
+
 {% block content %}
-<h1>Ingresar</h1>
-<form method="post">{% csrf_token %}
-  <div class="mb-3">
-    <label for="id_username" class="form-label">Usuario</label>
-    {{ form.username|add_class:'form-control' }}
+<div class="container">
+  <div class="row justify-content-center mt-5">
+    <div class="col-md-5">
+      <div class="card shadow-lg border-0">
+        <div class="card-header bg-primary text-white text-center py-4">
+          <i class="fas fa-sign-in-alt fa-3x mb-3"></i>
+          <h2 class="mb-0">Iniciar Sesión</h2>
+          <p class="mb-0 text-white-50">Bienvenido de vuelta</p>
+        </div>
+        <div class="card-body p-4">
+          {% if form.errors %}
+          <div class="alert alert-danger">
+            <i class="fas fa-exclamation-triangle"></i>
+            Usuario o contraseña incorrectos
+          </div>
+          {% endif %}
+          
+          <form method="post">
+            {% csrf_token %}
+            <div class="mb-3">
+              <label for="id_username" class="form-label fw-bold">
+                <i class="fas fa-user"></i> Usuario
+              </label>
+              {{ form.username|add_class:'form-control form-control-lg' }}
+            </div>
+            <div class="mb-4">
+              <label for="id_password" class="form-label fw-bold">
+                <i class="fas fa-lock"></i> Contraseña
+              </label>
+              {{ form.password|add_class:'form-control form-control-lg' }}
+            </div>
+            <button class="btn btn-primary btn-lg w-100 mb-3">
+              <i class="fas fa-sign-in-alt"></i> Entrar
+            </button>
+          </form>
+        </div>
+        <div class="card-footer text-center bg-light">
+          <p class="mb-0">
+            ¿No tienes cuenta? 
+            <a href="{% url 'accounts:signup' %}" class="fw-bold">
+              <i class="fas fa-user-plus"></i> Regístrate aquí
+            </a>
+          </p>
+        </div>
+      </div>
+    </div>
   </div>
-  <div class="mb-3">
-    <label for="id_password" class="form-label">Contraseña</label>
-    {{ form.password|add_class:'form-control' }}
-  </div>
-  <button class="btn btn-primary">Entrar</button>
-</form>
-<p class="mt-2">¿No tienes cuenta? <a href="/accounts/signup/">Regístrate</a></p>
+</div>
 {% endblock %}

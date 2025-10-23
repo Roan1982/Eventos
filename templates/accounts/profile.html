@@ -1,39 +1,163 @@
 {% extends 'base.html' %}
 {% load form_tags %}
+
 {% block content %}
-<h1>Perfil</h1>
-<form method="post" enctype="multipart/form-data">{% csrf_token %}
-  <div class="row">
-    <div class="col-md-4">
-      {% if user.userprofile.avatar %}
-        <img id="avatarPreview" src="{% url 'accounts:blob_serve' user.userprofile.avatar.id %}" class="rounded mb-2 img-fluid" style="max-width:240px;">
-      {% else %}
-        <img id="avatarPreview" src="" class="rounded mb-2 img-fluid d-none" style="max-width:240px;">
-      {% endif %}
-    </div>
-    <div class="col-md-8">
-      <div class="mb-3">
-        <label for="id_first_name" class="form-label">Nombre</label>
-        {{ form.first_name|add_class:'form-control' }}
+<div class="container">
+  <div class="page-header mb-4">
+    <div class="d-flex justify-content-between align-items-center">
+      <div>
+        <h1>
+          <i class="fas fa-user-circle text-primary"></i> Mi Perfil
+        </h1>
+        <p class="lead text-muted">Administra tu información personal</p>
       </div>
-      <div class="mb-3">
-        <label for="id_last_name" class="form-label">Apellido</label>
-        {{ form.last_name|add_class:'form-control' }}
-      </div>
-      <div class="mb-3">
-        <label for="id_phone" class="form-label">Teléfono</label>
-        {{ form.phone|add_class:'form-control' }}
-      </div>
-      <div class="mb-3">
-        <label for="id_bio" class="form-label">Bio</label>
-        {{ form.bio|add_class:'form-control' }}
-      </div>
-      <div class="mb-3">
-        <label for="id_avatar_file" class="form-label">Avatar</label>
-        {{ form.avatar_file|add_class:'form-control' }}
-      </div>
-      <button class="btn btn-primary">Guardar</button>
+      <a href="{% url 'home' %}" class="btn btn-outline-secondary">
+        <i class="fas fa-home"></i> Volver al Inicio
+      </a>
     </div>
   </div>
-</form>
+
+  <form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    
+    {% if form.errors %}
+    <div class="alert alert-danger mb-4">
+      <h5 class="alert-heading">
+        <i class="fas fa-exclamation-triangle"></i> Errores en el formulario
+      </h5>
+      <ul class="mb-0">
+        {% for field, errors in form.errors.items %}
+          <li><strong>{{ field }}</strong>: {{ errors|join:", " }}</li>
+        {% endfor %}
+      </ul>
+    </div>
+    {% endif %}
+
+    <div class="row">
+      <!-- Columna de Avatar -->
+      <div class="col-lg-4 mb-4">
+        <div class="card shadow-sm">
+          <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">
+              <i class="fas fa-image"></i> Foto de Perfil
+            </h5>
+          </div>
+          <div class="card-body text-center">
+            <div class="avatar-wrapper mb-3">
+              {% if user.userprofile.avatar %}
+                <img id="avatarPreview" src="{% url 'accounts:blob_serve' user.userprofile.avatar.id %}" 
+                     class="rounded-circle img-fluid shadow" style="width: 200px; height: 200px; object-fit: cover;">
+              {% else %}
+                <div class="avatar-placeholder" style="width: 200px; height: 200px; margin: 0 auto;">
+                  <i class="fas fa-user-circle fa-10x text-muted"></i>
+                </div>
+              {% endif %}
+            </div>
+            
+            <div class="mb-3">
+              <label for="id_avatar_file" class="form-label fw-bold">
+                <i class="fas fa-upload"></i> Cambiar Avatar
+              </label>
+              {{ form.avatar_file|add_class:'form-control' }}
+              <small class="form-text text-muted">JPG, PNG o GIF (Max 5MB)</small>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Columna de Información -->
+      <div class="col-lg-8">
+        <!-- Información Personal -->
+        <div class="card shadow-sm mb-4">
+          <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">
+              <i class="fas fa-id-card"></i> Información Personal
+            </h5>
+          </div>
+          <div class="card-body">
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label for="id_first_name" class="form-label fw-bold">
+                  <i class="fas fa-user"></i> Nombre
+                </label>
+                {{ form.first_name|add_class:'form-control' }}
+              </div>
+              <div class="col-md-6 mb-3">
+                <label for="id_last_name" class="form-label fw-bold">
+                  <i class="fas fa-user"></i> Apellido
+                </label>
+                {{ form.last_name|add_class:'form-control' }}
+              </div>
+            </div>
+            
+            <div class="mb-3">
+              <label for="id_phone" class="form-label fw-bold">
+                <i class="fas fa-phone"></i> Teléfono
+              </label>
+              {{ form.phone|add_class:'form-control' }}
+              <small class="form-text text-muted">Formato: +52 1234567890</small>
+            </div>
+            
+            <div class="mb-3">
+              <label for="id_bio" class="form-label fw-bold">
+                <i class="fas fa-align-left"></i> Biografía
+              </label>
+              {{ form.bio|add_class:'form-control' }}
+              <small class="form-text text-muted">Cuéntanos un poco sobre ti</small>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Contacto (si tienes estos campos) -->
+        {% if form.contact_whatsapp or form.contact_telegram or form.allow_contact %}
+        <div class="card shadow-sm mb-4">
+          <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">
+              <i class="fas fa-address-book"></i> Información de Contacto
+            </h5>
+          </div>
+          <div class="card-body">
+            {% if form.contact_whatsapp %}
+            <div class="mb-3">
+              <label for="id_contact_whatsapp" class="form-label fw-bold">
+                <i class="fab fa-whatsapp text-success"></i> WhatsApp
+              </label>
+              {{ form.contact_whatsapp|add_class:'form-control' }}
+            </div>
+            {% endif %}
+            
+            {% if form.contact_telegram %}
+            <div class="mb-3">
+              <label for="id_contact_telegram" class="form-label fw-bold">
+                <i class="fab fa-telegram text-info"></i> Telegram
+              </label>
+              {{ form.contact_telegram|add_class:'form-control' }}
+            </div>
+            {% endif %}
+            
+            {% if form.allow_contact %}
+            <div class="form-check">
+              {{ form.allow_contact|add_class:'form-check-input' }}
+              <label class="form-check-label" for="id_allow_contact">
+                <i class="fas fa-envelope"></i> Permitir que otros usuarios me contacten
+              </label>
+            </div>
+            {% endif %}
+          </div>
+        </div>
+        {% endif %}
+        
+        <!-- Botones -->
+        <div class="d-flex gap-3 justify-content-between">
+          <a href="{% url 'home' %}" class="btn btn-outline-secondary btn-lg">
+            <i class="fas fa-times"></i> Cancelar
+          </a>
+          <button type="submit" class="btn btn-primary btn-lg">
+            <i class="fas fa-save"></i> Guardar Cambios
+          </button>
+        </div>
+      </div>
+    </div>
+  </form>
+</div>
 {% endblock %}

@@ -1,25 +1,75 @@
 {% extends 'base.html' %}
 {% load form_tags %}
+
 {% block content %}
-<h1>Registro</h1>
-<form method="post">{% csrf_token %}
-  {{ form.non_field_errors }}
-  <div class="mb-3">
-    <label for="id_username" class="form-label">Usuario</label>
-    {{ form.username|add_class:'form-control' }}
+<div class="container">
+  <div class="row justify-content-center mt-5">
+    <div class="col-md-6">
+      <div class="card shadow-lg border-0">
+        <div class="card-header bg-primary text-white text-center py-4">
+          <i class="fas fa-user-plus fa-3x mb-3"></i>
+          <h2 class="mb-0">Crear Cuenta</h2>
+          <p class="mb-0 text-white-50">Únete a ReJuntada</p>
+        </div>
+        <div class="card-body p-4">
+          {% if form.errors %}
+          <div class="alert alert-danger">
+            <h6 class="alert-heading">
+              <i class="fas fa-exclamation-triangle"></i> Errores en el formulario
+            </h6>
+            <ul class="mb-0">
+              {% for field, errors in form.errors.items %}
+                <li><strong>{{ field }}</strong>: {{ errors|join:", " }}</li>
+              {% endfor %}
+            </ul>
+          </div>
+          {% endif %}
+          
+          {{ form.non_field_errors }}
+          
+          <form method="post">
+            {% csrf_token %}
+            <div class="mb-3">
+              <label for="id_username" class="form-label fw-bold">
+                <i class="fas fa-user"></i> Usuario *
+              </label>
+              {{ form.username|add_class:'form-control form-control-lg' }}
+              <small class="form-text text-muted">Será visible para otros usuarios</small>
+            </div>
+            <div class="mb-3">
+              <label for="id_email" class="form-label fw-bold">
+                <i class="fas fa-envelope"></i> Email *
+              </label>
+              {{ form.email|add_class:'form-control form-control-lg' }}
+            </div>
+            <div class="mb-3">
+              <label for="id_password1" class="form-label fw-bold">
+                <i class="fas fa-lock"></i> Contraseña *
+              </label>
+              {{ form.password1|add_class:'form-control form-control-lg' }}
+              <small class="form-text text-muted">Mínimo 8 caracteres</small>
+            </div>
+            <div class="mb-4">
+              <label for="id_password2" class="form-label fw-bold">
+                <i class="fas fa-lock"></i> Confirmar Contraseña *
+              </label>
+              {{ form.password2|add_class:'form-control form-control-lg' }}
+            </div>
+            <button class="btn btn-primary btn-lg w-100 mb-3">
+              <i class="fas fa-user-plus"></i> Crear Cuenta
+            </button>
+          </form>
+        </div>
+        <div class="card-footer text-center bg-light">
+          <p class="mb-0">
+            ¿Ya tienes cuenta? 
+            <a href="{% url 'accounts:login' %}" class="fw-bold">
+              <i class="fas fa-sign-in-alt"></i> Inicia sesión aquí
+            </a>
+          </p>
+        </div>
+      </div>
+    </div>
   </div>
-  <div class="mb-3">
-    <label for="id_email" class="form-label">Email</label>
-    {{ form.email|add_class:'form-control' }}
-  </div>
-  <div class="mb-3">
-    <label for="id_password1" class="form-label">Contraseña</label>
-    {{ form.password1|add_class:'form-control' }}
-  </div>
-  <div class="mb-3">
-    <label for="id_password2" class="form-label">Confirmar contraseña</label>
-    {{ form.password2|add_class:'form-control' }}
-  </div>
-  <button class="btn btn-primary">Crear cuenta</button>
-</form>
+</div>
 {% endblock %}

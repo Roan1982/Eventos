@@ -1,110 +1,392 @@
 {% extends 'base.html' %}
+
 {% block meta %}
   <meta property="og:title" content="{{ event.title }}">
   <meta property="og:description" content="{{ event.description|striptags|truncatechars:150 }}">
   <meta property="og:type" content="event">
   <meta property="og:url" content="{{ request.build_absolute_uri }}">
 {% endblock %}
+
 {% load form_tags %}
+
 {% block content %}
-<div class="d-flex justify-content-between align-items-center">
-  <h1>{{ event.title }}</h1>
-  {% if user == event.creator or user.is_superuser %}
-  <div>
-    <a class="btn btn-sm btn-outline-secondary" href="{{ event.get_absolute_url }}editar/">Editar</a>
-    <a class="btn btn-sm btn-outline-danger" href="{{ event.get_absolute_url }}eliminar/">Eliminar</a>
-  </div>
-  {% endif %}
-</div>
-<p>
-  <span class="badge bg-secondary">{{ event.category.name }}</span>
-  <span class="ms-2">{{ event.city }}</span>
-  {% if event.is_free %}<span class="badge bg-success ms-2">Gratis</span>{% else %}
-  <span class="badge bg-info ms-2">${{ event.price }}</span>{% endif %}
-</p>
-<p>{{ event.description|linebreaks }}</p>
-
-<div class="mb-3">
-  <strong>Compartir: </strong>
-  <a class="btn btn-sm btn-outline-primary" target="_blank" href="https://twitter.com/intent/tweet?url={{ request.build_absolute_uri|urlencode }}&text={{ event.title|urlencode }}">Twitter</a>
-  <a class="btn btn-sm btn-outline-primary" target="_blank" href="https://www.facebook.com/sharer/sharer.php?u={{ request.build_absolute_uri|urlencode }}">Facebook</a>
-  <a class="btn btn-sm btn-outline-success" target="_blank" href="https://wa.me/?text={{ request.build_absolute_uri|urlencode }}">WhatsApp</a>
-  <a class="btn btn-sm btn-outline-info" target="_blank" href="https://t.me/share/url?url={{ request.build_absolute_uri|urlencode }}&text={{ event.title|urlencode }}">Telegram</a>
-</div>
-
-<div class="row">
-  {% for m in event.media.all %}
-  <div class="col-md-4 mb-3">
-    {% if m.content_type.startswith('image') %}
-      <img src="{% url 'events:media_blob' m.id %}" class="img-fluid rounded" alt="{{ m.filename }}">
-    {% elif m.content_type.startswith('video') %}
-      <video controls class="w-100">
-        <source src="{% url 'events:media_blob' m.id %}" type="{{ m.content_type }}">
-      </video>
+<!-- Hero Section con Imagen de Portada -->
+<div class="event-hero mb-5">
+  {% with media_list=media_list %}
+    {% if event.cover_media %}
+      <div class="event-hero-image">
+        <img src="{% url 'events:media_blob' event.cover_media.id %}" alt="{{ event.title }}">
+      </div>
+    {% elif media_list %}
+      <div class="event-hero-image">
+        <img src="{% url 'events:media_blob' media_list.0.id %}" alt="{{ event.title }}">
+      </div>
     {% else %}
-      <a href="{% url 'events:media_blob' m.id %}">{{ m.filename }}</a>
+      <div class="event-hero-image" style="background: linear-gradient(135deg, var(--brand-primary), var(--brand-secondary)); min-height: 400px;"></div>
     {% endif %}
+  {% endwith %}
+  
+  <div class="event-hero-overlay">
+    <div class="container">
+      <div class="d-flex justify-content-between align-items-start">
+        <div class="flex-grow-1">
+          <h1 class="display-4 fw-bold text-white mb-3">{{ event.title }}</h1>
+          
+          <div class="event-meta-hero mb-3">
+            <span class="badge badge-hero me-2">
+              <i class="fas fa-tag"></i> {{ event.category.name }}
+            </span>
+            {% if event.featured %}
+            <span class="badge badge-featured me-2">
+              <i class="fas fa-star"></i> Destacado
+            </span>
+            {% endif %}
+            {% if event.is_free %}
+            <span class="badge bg-success me-2">
+              <i class="fas fa-gift"></i> Gratis
+            </span>
+            {% else %}
+            <span class="badge bg-light text-dark me-2">
+              <i class="fas fa-ticket-alt"></i> ${{ event.price }}
+            </span>
+            {% endif %}
+          </div>
+          
+          <div class="event-info-blocks">
+            <div class="info-block">
+              <i class="fas fa-calendar text-white"></i>
+              <div class="ms-2">
+                <small class="text-white-50 d-block">Inicio</small>
+                <span class="text-white">{{ event.start_datetime|date:"d M, Y - H:i" }}</span>
+              </div>
+            </div>
+            {% if event.end_datetime %}
+            <div class="info-block">
+              <i class="fas fa-calendar-check text-white"></i>
+              <div class="ms-2">
+                <small class="text-white-50 d-block">Fin</small>
+                <span class="text-white">{{ event.end_datetime|date:"d M, Y - H:i" }}</span>
+              </div>
+            </div>
+            {% endif %}
+            <div class="info-block">
+              <i class="fas fa-map-marker-alt text-white"></i>
+              <div class="ms-2">
+                <small class="text-white-50 d-block">Ubicación</small>
+                <span class="text-white">{{ event.city }}{% if event.address %}, {{ event.address }}{% endif %}</span>
+              </div>
+            </div>
+            <div class="info-block">
+              <i class="fas fa-user text-white"></i>
+              <div class="ms-2">
+                <small class="text-white-50 d-block">Organizado por</small>
+                <span class="text-white">{{ event.creator.username }}</span>
+              </div>
+            </div>
+            <div class="info-block">
+              <i class="fas fa-eye text-white"></i>
+              <div class="ms-2">
+                <small class="text-white-50 d-block">Visto</small>
+                <span class="text-white">{{ event.view_count }} veces</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        {% if user == event.creator or user.is_superuser %}
+        <div class="ms-3">
+          <a class="btn btn-light mb-2 d-block" href="{{ event.get_absolute_url }}editar/">
+            <i class="fas fa-edit"></i> Editar
+          </a>
+          <a class="btn btn-outline-light d-block" href="{{ event.get_absolute_url }}eliminar/">
+            <i class="fas fa-trash"></i> Eliminar
+          </a>
+        </div>
+        {% endif %}
+      </div>
+    </div>
   </div>
-  {% empty %}
-  <p>Sin multimedia</p>
-  {% endfor %}
 </div>
 
-<h3>Contacto</h3>
-{% if event.creator.userprofile.allow_contact %}
-  <p>
-    {% if event.creator.email %}<a class="btn btn-sm btn-outline-secondary" href="mailto:{{ event.creator.email }}">Email</a>{% endif %}
-    {% if event.creator.userprofile.contact_whatsapp %}<a class="btn btn-sm btn-outline-success" href="https://wa.me/{{ event.creator.userprofile.contact_whatsapp }}" target="_blank">WhatsApp</a>{% endif %}
-    {% if event.creator.userprofile.contact_telegram %}<a class="btn btn-sm btn-outline-info" href="tg://resolve?domain={{ event.creator.userprofile.contact_telegram }}">Telegram</a>{% endif %}
-  </p>
-  <form action="{% url 'events:contact_creator' event.slug %}" method="post" class="mt-2">
-    {% csrf_token %}
-    <div class="mb-3">
-      <label for="id_name" class="form-label">Nombre</label>
-      {{ contact_form.name|add_class:'form-control' }}
+<!-- Contenido Principal -->
+<div class="container mb-5">
+  <div class="row">
+    <!-- Columna Principal -->
+    <div class="col-lg-8">
+      <!-- Descripción -->
+      <div class="card mb-4">
+        <div class="card-body">
+          <h3 class="card-title">
+            <i class="fas fa-info-circle text-primary"></i> Descripción
+          </h3>
+          <div class="event-description">
+            {{ event.description|linebreaks }}
+          </div>
+        </div>
+      </div>
+      
+      <!-- Galería de Media -->
+      {% with media_list=media_list %}
+        {% if media_list %}
+        <div class="card mb-4">
+          <div class="card-body">
+            <h3 class="card-title">
+              <i class="fas fa-images text-primary"></i> Multimedia ({{ media_list|length }})
+            </h3>
+            
+            <!-- Visor principal -->
+            <div id="mainMediaWrapper" class="mb-3">
+              {% with m=event.cover_media|default:media_list.0 %}
+                {% if m.mime_main == 'image' %}
+                  <img id="mainMedia" src="{% url 'events:media_blob' m.id %}" 
+                       class="img-fluid w-100 rounded" alt="{{ m.filename }}" 
+                       style="height:400px; object-fit:cover;">
+                {% elif m.mime_main == 'video' %}
+                  <video id="mainMedia" controls class="w-100 rounded" style="height:400px; object-fit:cover;">
+                    <source src="{% url 'events:media_blob' m.id %}" type="{{ m.content_type }}">
+                  </video>
+                {% else %}
+                  <a id="mainMedia" href="{% url 'events:media_blob' m.id %}" class="btn btn-outline-primary">
+                    <i class="fas fa-download"></i> {{ m.filename }}
+                  </a>
+                {% endif %}
+              {% endwith %}
+            </div>
+            
+            <!-- Thumbnails carousel -->
+            <div id="gallery" data-media='[
+              {% for m in media_list %}
+                {"id":{{ m.id }}, "url":"{% url 'events:media_blob' m.id %}", "mime":"{{ m.mime_main }}", "ctype":"{{ m.content_type|escapejs }}", "filename":"{{ m.filename|escapejs }}" }{% if not forloop.last %},{% endif %}
+              {% endfor %}
+            ]'>
+              <div class="d-flex justify-content-center align-items-center">
+                <button id="prevBtn" class="btn btn-sm btn-outline-secondary me-2" style="height: 40px;">
+                  <i class="fas fa-chevron-left"></i>
+                </button>
+                <div id="thumbs" class="d-flex gap-2 justify-content-center flex-grow-1" style="max-width: 600px;">
+                  <div class="thumb-slot" data-pos="prev" style="width:140px; height:100px;"></div>
+                  <div class="thumb-slot active" data-pos="current" style="width:140px; height:100px;"></div>
+                  <div class="thumb-slot" data-pos="next" style="width:140px; height:100px;"></div>
+                </div>
+                <button id="nextBtn" class="btn btn-sm btn-outline-secondary ms-2" style="height: 40px;">
+                  <i class="fas fa-chevron-right"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+        {% endif %}
+      {% endwith %}
+      
+      <!-- Reseñas -->
+      <div class="card mb-4">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <h3 class="card-title mb-0">
+              <i class="fas fa-star text-warning"></i> Reseñas
+            </h3>
+            {% if avg_rating %}
+            <span class="badge bg-warning text-dark fs-6">
+              <i class="fas fa-star"></i> {{ avg_rating|floatformat:1 }} / 5.0
+              <small class="ms-1">({{ review_count }} reseñas)</small>
+            </span>
+            {% endif %}
+          </div>
+          
+          <!-- Lista de reseñas -->
+          <div class="reviews-list mb-4">
+            {% for r in event.reviews.all %}
+            <div class="review-item border rounded p-3 mb-3">
+              <div class="d-flex justify-content-between align-items-start mb-2">
+                <div>
+                  <strong class="text-primary">
+                    <i class="fas fa-user-circle"></i> {{ r.user.username }}
+                  </strong>
+                  <div class="text-warning">
+                    {% for i in "12345"|make_list %}
+                      {% if forloop.counter <= r.rating %}
+                        <i class="fas fa-star"></i>
+                      {% else %}
+                        <i class="far fa-star"></i>
+                      {% endif %}
+                    {% endfor %}
+                  </div>
+                </div>
+                {% if user.is_superuser or user == event.creator %}
+                <a class="btn btn-sm btn-outline-danger" href="{% url 'events:delete_review' r.id %}">
+                  <i class="fas fa-trash"></i>
+                </a>
+                {% endif %}
+              </div>
+              <p class="mb-0">{{ r.comment }}</p>
+            </div>
+            {% empty %}
+            <div class="alert alert-info text-center">
+              <i class="fas fa-comment-slash fa-2x mb-2 d-block"></i>
+              <p class="mb-0">No hay reseñas todavía. ¡Sé el primero en opinar!</p>
+            </div>
+            {% endfor %}
+          </div>
+          
+          <!-- Formulario de reseña -->
+          {% if user.is_authenticated %}
+          <div class="add-review-form">
+            <h5 class="mb-3"><i class="fas fa-pen"></i> Deja tu reseña</h5>
+            <form action="{% url 'events:add_review' event.slug %}" method="post">
+              {% csrf_token %}
+              <div class="row">
+                <div class="col-md-4 mb-3">
+                  <label for="id_rating" class="form-label">
+                    <i class="fas fa-star text-warning"></i> Puntuación
+                  </label>
+                  {{ review_form.rating|add_class:'form-select' }}
+                </div>
+                <div class="col-md-8 mb-3">
+                  <label for="id_comment" class="form-label">
+                    <i class="fas fa-comment"></i> Comentario
+                  </label>
+                  {{ review_form.comment|add_class:'form-control' }}
+                </div>
+              </div>
+              <button class="btn btn-primary">
+                <i class="fas fa-paper-plane"></i> Enviar Reseña
+              </button>
+            </form>
+          </div>
+          {% else %}
+          <div class="alert alert-warning">
+            <i class="fas fa-lock"></i> 
+            <a href="{% url 'accounts:login' %}">Inicia sesión</a> para dejar una reseña.
+          </div>
+          {% endif %}
+        </div>
+      </div>
     </div>
-    <div class="mb-3">
-      <label for="id_email" class="form-label">Email</label>
-      {{ contact_form.email|add_class:'form-control' }}
+    
+    <!-- Sidebar -->
+    <div class="col-lg-4">
+      <!-- Compartir -->
+      <div class="card mb-4">
+        <div class="card-body">
+          <h5 class="card-title">
+            <i class="fas fa-share-alt text-primary"></i> Compartir Evento
+          </h5>
+          <div class="d-grid gap-2">
+            <a class="btn btn-outline-primary btn-sm" target="_blank" 
+               href="https://twitter.com/intent/tweet?url={{ request.build_absolute_uri|urlencode }}&text={{ event.title|urlencode }}">
+              <i class="fab fa-twitter"></i> Twitter
+            </a>
+            <a class="btn btn-outline-primary btn-sm" target="_blank" 
+               href="https://www.facebook.com/sharer/sharer.php?u={{ request.build_absolute_uri|urlencode }}">
+              <i class="fab fa-facebook"></i> Facebook
+            </a>
+            <a class="btn btn-outline-success btn-sm" target="_blank" 
+               href="https://wa.me/?text={{ event.title|urlencode }}%20{{ request.build_absolute_uri|urlencode }}">
+              <i class="fab fa-whatsapp"></i> WhatsApp
+            </a>
+            <a class="btn btn-outline-info btn-sm" target="_blank" 
+               href="https://t.me/share/url?url={{ request.build_absolute_uri|urlencode }}&text={{ event.title|urlencode }}">
+              <i class="fab fa-telegram"></i> Telegram
+            </a>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Contacto con el Organizador -->
+      <div class="card mb-4">
+        <div class="card-body">
+          <h5 class="card-title">
+            <i class="fas fa-envelope text-primary"></i> Contactar Organizador
+          </h5>
+          
+          {% if event.creator.userprofile.allow_contact %}
+            <!-- Botones rápidos -->
+            <div class="d-grid gap-2 mb-3">
+              {% if event.creator.email %}
+              <a class="btn btn-outline-secondary btn-sm" href="mailto:{{ event.creator.email }}">
+                <i class="fas fa-envelope"></i> Email
+              </a>
+              {% endif %}
+              {% if event.creator.userprofile.contact_whatsapp %}
+              <a class="btn btn-outline-success btn-sm" href="https://wa.me/{{ event.creator.userprofile.contact_whatsapp }}" target="_blank">
+                <i class="fab fa-whatsapp"></i> WhatsApp
+              </a>
+              {% endif %}
+              {% if event.creator.userprofile.contact_telegram %}
+              <a class="btn btn-outline-info btn-sm" href="tg://resolve?domain={{ event.creator.userprofile.contact_telegram }}">
+                <i class="fab fa-telegram"></i> Telegram
+              </a>
+              {% endif %}
+            </div>
+            
+            <hr>
+            
+            <!-- Formulario de contacto -->
+            <form action="{% url 'events:contact_creator' event.slug %}" method="post">
+              {% csrf_token %}
+              <div class="mb-2">
+                <label for="id_name" class="form-label small">Nombre</label>
+                {{ contact_form.name|add_class:'form-control form-control-sm' }}
+              </div>
+              <div class="mb-2">
+                <label for="id_email" class="form-label small">Email</label>
+                {{ contact_form.email|add_class:'form-control form-control-sm' }}
+              </div>
+              <div class="mb-2">
+                <label for="id_message" class="form-label small">Mensaje</label>
+                {{ contact_form.message|add_class:'form-control form-control-sm' }}
+              </div>
+              <button class="btn btn-primary btn-sm w-100">
+                <i class="fas fa-paper-plane"></i> Enviar Mensaje
+              </button>
+            </form>
+          {% else %}
+            <p class="text-muted small mb-0">
+              <i class="fas fa-ban"></i> El organizador no acepta mensajes directos.
+            </p>
+          {% endif %}
+        </div>
+      </div>
+      
+      <!-- Eventos Relacionados -->
+      {% if related_events %}
+      <div class="card">
+        <div class="card-body">
+          <h5 class="card-title">
+            <i class="fas fa-calendar-alt text-primary"></i> Eventos Similares
+          </h5>
+          <div class="list-group list-group-flush">
+            {% for re in related_events %}
+            <a href="{{ re.get_absolute_url }}" class="list-group-item list-group-item-action p-2">
+              <div class="d-flex gap-2">
+                {% if re.cover_media %}
+                <img src="{% url 'events:media_blob' re.cover_media.id %}" 
+                     alt="{{ re.title }}" class="rounded" 
+                     style="width: 60px; height: 60px; object-fit: cover;">
+                {% else %}
+                <div class="bg-light rounded d-flex align-items-center justify-content-center" 
+                     style="width: 60px; height: 60px;">
+                  <i class="fas fa-calendar text-muted"></i>
+                </div>
+                {% endif %}
+                <div class="flex-grow-1" style="min-width: 0;">
+                  <h6 class="mb-1 text-truncate">{{ re.title }}</h6>
+                  <small class="text-muted d-block">
+                    <i class="fas fa-calendar"></i> {{ re.start_datetime|date:"d M" }}
+                  </small>
+                  <small class="text-muted">
+                    <i class="fas fa-map-marker-alt"></i> {{ re.city }}
+                  </small>
+                </div>
+              </div>
+            </a>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+      {% endif %}
     </div>
-    <div class="mb-3">
-      <label for="id_message" class="form-label">Mensaje</label>
-      {{ contact_form.message|add_class:'form-control' }}
-    </div>
-    <button class="btn btn-primary">Enviar mensaje</button>
-  </form>
-{% else %}
-  <p>El creador no acepta mensajes directos.</p>
-{% endif %}
-
-<h3 class="mt-4">Reseñas</h3>
-<p>Promedio: ⭐ {{ avg_rating|floatformat:1 }}</p>
-{% for r in event.reviews.all %}
-  <div class="border rounded p-2 mb-2">
-    <strong>⭐ {{ r.rating }}</strong> - {{ r.user.username }}
-    <p class="mb-1">{{ r.comment }}</p>
-    {% if user.is_superuser or user == event.creator %}
-      <a class="btn btn-sm btn-outline-danger" href="{% url 'events:delete_review' r.id %}">Eliminar</a>
-    {% endif %}
   </div>
-{% empty %}
-  <p>No hay reseñas.</p>
-{% endfor %}
-
-{% if user.is_authenticated %}
-<form action="{% url 'events:add_review' event.slug %}" method="post" class="mt-3">
-  {% csrf_token %}
-  <div class="mb-3">
-    <label for="id_rating" class="form-label">Puntuación</label>
-    {{ review_form.rating|add_class:'form-select' }}
-  </div>
-  <div class="mb-3">
-    <label for="id_comment" class="form-label">Comentario</label>
-    {{ review_form.comment|add_class:'form-control' }}
-  </div>
-  <button class="btn btn-primary">Enviar reseña</button>
-</form>
-{% else %}
-<p><a href="/accounts/login/">Inicia sesión</a> para dejar una reseña.</p>
-{% endif %}
+</div>
 {% endblock %}
+

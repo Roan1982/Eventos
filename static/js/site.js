@@ -1,47 +1,278 @@
 document.addEventListener('DOMContentLoaded', function(){
+  // ===== Select2 Init for all select elements =====
+  if(typeof $ !== 'undefined' && $.fn.select2){
+    // Initialize Select2 for all select inputs
+    $('select').each(function(){
+      $(this).select2({
+        theme: 'bootstrap-5',
+        width: '100%',
+        placeholder: $(this).attr('data-placeholder') || 'Seleccionar...',
+        allowClear: !$(this).prop('required'),
+        language: {
+          noResults: function() { return "No hay resultados"; },
+          searching: function() { return "Buscando..."; }
+        }
+      });
+    });
+  }
+
+  // ===== Avatar Preview =====
   const avatarInput = document.querySelector('input[type=file][name=avatar_file]');
   const avatarPreview = document.getElementById('avatarPreview');
   if(avatarInput && avatarPreview){
     avatarInput.addEventListener('change', function(e){
       const f = this.files && this.files[0];
-      if(!f){ avatarPreview.classList.add('d-none'); avatarPreview.src = ''; return; }
+      if(!f){ 
+        if(avatarPreview.classList) avatarPreview.classList.add('d-none'); 
+        avatarPreview.src = ''; 
+        return; 
+      }
       const url = URL.createObjectURL(f);
-      avatarPreview.src = url; avatarPreview.classList.remove('d-none');
+      avatarPreview.src = url; 
+      if(avatarPreview.classList) avatarPreview.classList.remove('d-none');
     });
   }
 
-  const mediaInput = document.querySelector('input[type=file][name=media_files]');
-  const mediaPreview = document.getElementById('mediaPreview');
-  if(mediaInput && mediaPreview){
-    mediaInput.addEventListener('change', function(e){
-      mediaPreview.innerHTML = '';
-      Array.from(this.files).forEach(f => {
-        const type = f.type || '';
-        if(type.startsWith('image/')){
-          const img = document.createElement('img');
-          img.src = URL.createObjectURL(f);
-          img.className = 'rounded';
-          mediaPreview.appendChild(img);
-        } else if(type.startsWith('video/')){
-          const vid = document.createElement('video');
-          vid.src = URL.createObjectURL(f);
-          vid.controls = true;
-          vid.className = 'rounded';
-          vid.style.maxWidth = '200px';
-          mediaPreview.appendChild(vid);
-        }
+  // ===== FilePond Configuration =====
+  if(window.FilePond){
+    // Register plugins
+    if(window.FilePondPluginFileValidateType) FilePond.registerPlugin(FilePondPluginFileValidateType);
+    if(window.FilePondPluginFileValidateSize) FilePond.registerPlugin(FilePondPluginFileValidateSize);
+    if(window.FilePondPluginImagePreview) FilePond.registerPlugin(FilePondPluginImagePreview);
+    if(window.FilePondPluginImageExifOrientation) FilePond.registerPlugin(FilePondPluginImageExifOrientation);
+
+    // Initialize FilePond for media_files input
+    const mediaInput = document.querySelector('input[type=file][name=media_files]');
+    if(mediaInput){
+      const pond = FilePond.create(mediaInput, {
+        allowMultiple: true,
+        instantUpload: false,
+        maxFileSize: '10MB',
+        acceptedFileTypes: ['image/*', 'video/*'],
+        maxFiles: 10,
+        labelIdle: `
+          <div class="filepond-label-wrapper">
+            <i class="fas fa-cloud-upload-alt fa-3x mb-2"></i>
+            <p class="mb-1"><strong>Arrastra y suelta tus archivos aquí</strong></p>
+            <p class="small text-muted">o haz clic para seleccionar</p>
+            <p class="small text-muted">Imágenes y videos (Max 10MB cada uno)</p>
+          </div>
+        `,
+        labelFileProcessing: 'Procesando',
+        labelFileProcessingComplete: 'Listo',
+        labelTapToCancel: 'Clic para cancelar',
+        labelTapToRetry: 'Clic para reintentar',
+        labelTapToUndo: 'Clic para deshacer',
+        labelButtonRemoveItem: 'Eliminar',
+        labelButtonAbortItemLoad: 'Cancelar',
+        labelButtonRetryItemLoad: 'Reintentar',
+        labelButtonAbortItemProcessing: 'Cancelar',
+        labelButtonUndoItemProcessing: 'Deshacer',
+        labelButtonRetryItemProcessing: 'Reintentar',
+        labelButtonProcessItem: 'Subir',
+        labelMaxFileSizeExceeded: 'Archivo muy grande',
+        labelMaxFileSize: 'Tamaño máximo: {filesize}',
+        labelFileTypeNotAllowed: 'Tipo de archivo no permitido',
+        fileValidateTypeLabelExpectedTypes: 'Espera {allButLastType} o {lastType}',
+        imagePreviewHeight: 170,
+        imagePreviewMaxHeight: 256,
+        stylePanelLayout: 'compact circle',
+        styleLoadIndicatorPosition: 'center bottom',
+        styleProgressIndicatorPosition: 'right bottom',
+        styleButtonRemoveItemPosition: 'left bottom',
+        styleButtonProcessItemPosition: 'right bottom',
       });
+    }
+  }
+
+  // ===== Hover Actions for Existing Media (Edit Form) =====
+  const mediaCards = document.querySelectorAll('.media-card-edit');
+  mediaCards.forEach(card => {
+    const deleteCheckbox = card.querySelector('input[type=checkbox][name=delete_media]');
+    const coverRadio = card.querySelector('input[type=radio][name=cover_media]');
+    
+    // Create hover overlay
+    const overlay = document.createElement('div');
+    overlay.className = 'media-hover-overlay';
+    overlay.innerHTML = `
+      <div class="media-hover-actions">
+        <button type="button" class="btn btn-danger btn-sm hover-delete-btn" title="Eliminar">
+          <i class="fas fa-trash"></i>
+        </button>
+        <button type="button" class="btn btn-warning btn-sm hover-cover-btn" title="Portada">
+          <i class="fas fa-star"></i>
+        </button>
+      </div>
+    `;
+    
+    card.querySelector('.media-preview').appendChild(overlay);
+    
+    // Handle delete button click
+    const deleteBtn = overlay.querySelector('.hover-delete-btn');
+    deleteBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      if(deleteCheckbox){
+        deleteCheckbox.checked = !deleteCheckbox.checked;
+        if(deleteCheckbox.checked){
+          card.style.opacity = '0.5';
+          card.style.border = '2px solid #dc3545';
+          deleteBtn.innerHTML = '<i class="fas fa-undo"></i>';
+          deleteBtn.classList.remove('btn-danger');
+          deleteBtn.classList.add('btn-secondary');
+          deleteBtn.title = 'Cancelar eliminación';
+        } else {
+          card.style.opacity = '1';
+          card.style.border = '2px solid var(--border-color)';
+          deleteBtn.innerHTML = '<i class="fas fa-trash"></i>';
+          deleteBtn.classList.remove('btn-secondary');
+          deleteBtn.classList.add('btn-danger');
+          deleteBtn.title = 'Eliminar';
+        }
+      }
     });
+    
+    // Handle cover button click
+    const coverBtn = overlay.querySelector('.hover-cover-btn');
+    coverBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      if(coverRadio){
+        coverRadio.checked = true;
+        // Update all cards to show which is cover
+        document.querySelectorAll('.media-card-edit').forEach(c => {
+          c.classList.remove('is-cover');
+        });
+        card.classList.add('is-cover');
+      }
+    });
+    
+    // Check initial state
+    if(deleteCheckbox && deleteCheckbox.checked){
+      card.style.opacity = '0.5';
+      card.style.border = '2px solid #dc3545';
+    }
+    if(coverRadio && coverRadio.checked){
+      card.classList.add('is-cover');
+    }
+  });
+
+  // ===== Gallery / Carousel Init =====
+  function initGallery(gallery){
+    if(!gallery) return;
+    try{
+      const media = JSON.parse(gallery.getAttribute('data-media') || '[]');
+      if(!media.length) return;
+      
+      let index = 0;
+      const wrapper = document.getElementById('mainMediaWrapper');
+      
+      const renderSlot = (pos, item) => {
+        const slot = gallery.querySelector('.thumb-slot[data-pos="'+pos+'"]');
+        if(!slot) return; 
+        slot.innerHTML = '';
+        if(!item) return;
+        
+        if(item.mime === 'image'){
+          const img = document.createElement('img'); 
+          img.src = item.url; 
+          img.className='img-fluid rounded'; 
+          img.style.height='100px'; 
+          img.style.objectFit='cover'; 
+          img.style.width='100%'; 
+          img.style.cursor='pointer';
+          slot.appendChild(img);
+        } else if(item.mime === 'video'){
+          const vid = document.createElement('video'); 
+          vid.muted=true; 
+          vid.className='w-100 rounded'; 
+          vid.style.height='100px';
+          vid.style.objectFit='cover';
+          vid.style.cursor='pointer';
+          const s=document.createElement('source'); 
+          s.src=item.url; 
+          s.type=item.ctype; 
+          vid.appendChild(s); 
+          slot.appendChild(vid);
+        } else { 
+          slot.textContent = item.filename; 
+        }
+      };
+      
+      const renderMain = (item) => {
+        if(!wrapper) return; 
+        wrapper.innerHTML = '';
+        if(!item) return;
+        
+        if(item.mime === 'image'){
+          const img = document.createElement('img'); 
+          img.id='mainMedia'; 
+          img.src=item.url; 
+          img.className='img-fluid rounded'; 
+          img.style.maxHeight='400px'; 
+          img.style.objectFit='contain'; 
+          img.style.width='100%';
+          wrapper.appendChild(img);
+        } else if(item.mime === 'video'){
+          const vid = document.createElement('video'); 
+          vid.controls=true; 
+          vid.id='mainMedia'; 
+          vid.className='w-100 rounded'; 
+          vid.style.maxHeight='400px'; 
+          vid.style.objectFit='contain'; 
+          const s=document.createElement('source'); 
+          s.src=item.url; 
+          s.type=item.ctype; 
+          vid.appendChild(s); 
+          wrapper.appendChild(vid);
+        } else { 
+          const a=document.createElement('a'); 
+          a.id='mainMedia'; 
+          a.href=item.url; 
+          a.textContent=item.filename; 
+          wrapper.appendChild(a); 
+        }
+      };
+      
+      const update = () => {
+        const prev = media[(index-1+media.length)%media.length];
+        const curr = media[index];
+        const next = media[(index+1)%media.length];
+        renderSlot('prev', prev); 
+        renderSlot('current', curr); 
+        renderSlot('next', next); 
+        renderMain(curr);
+      };
+      
+      const prevBtn = document.getElementById('prevBtn');
+      const nextBtn = document.getElementById('nextBtn');
+      if(prevBtn) prevBtn.addEventListener('click', ()=>{ 
+        index = (index-1+media.length)%media.length; 
+        update(); 
+      });
+      if(nextBtn) nextBtn.addEventListener('click', ()=>{ 
+        index = (index+1)%media.length; 
+        update(); 
+      });
+      
+      gallery.addEventListener('click', function(e){
+        const slot = e.target.closest('.thumb-slot'); 
+        if(!slot) return; 
+        const pos = slot.getAttribute('data-pos');
+        if(pos === 'prev') index = (index-1+media.length)%media.length; 
+        else if(pos === 'next') index = (index+1)%media.length; 
+        update();
+      });
+      
+      update();
+    }catch(err){ 
+      console.error('Failed to init gallery', err); 
+    }
+  }
+
+  // Initialize gallery if exists
+  const gallery = document.getElementById('gallery');
+  if(gallery){ 
+    initGallery(gallery); 
   }
 });
-
-// FilePond initialization (if library loaded)
-if(window.FilePond){
-  // Turn all file inputs into FilePond instances with default settings
-  FilePond.parse(document.body);
-  // Example: set options globally
-  FilePond.setOptions({
-    allowMultiple: true,
-    instantUpload: false,
-  });
-}
