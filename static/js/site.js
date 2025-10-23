@@ -47,16 +47,22 @@ document.addEventListener('DOMContentLoaded', function(){
     console.log('Media input found:', mediaInput ? 'YES' : 'NO');
     if(mediaInput){
       console.log('Initializing FilePond...');
+      
+      // CRÍTICO: FilePond debe estar en modo que NO reemplace el input
+      // sino que sincronice los archivos con él
+      FilePond.setOptions({
+        allowMultiple: true,
+      });
+      
       const pond = FilePond.create(mediaInput, {
         allowMultiple: true,
         instantUpload: false,
+        storeAsFile: true,  // CRÍTICO: almacenar como File objects reales
         maxFileSize: '10MB',
         acceptedFileTypes: ['image/*', 'video/*'],
         maxFiles: 10,
-        // CRÍTICO: mantener el nombre del input original
         name: 'media_files',
-        // Permitir múltiples archivos con el mismo nombre
-        allowMultiple: true,
+        allowReorder: true,
         labelIdle: `
           <div class="filepond-label-wrapper">
             <i class="fas fa-cloud-upload-alt fa-3x mb-2"></i>
@@ -90,7 +96,14 @@ document.addEventListener('DOMContentLoaded', function(){
         styleButtonProcessItemPosition: 'right bottom',
       });
       
-      console.log('FilePond initialized successfully. Files will be submitted with form.');
+      console.log('FilePond initialized with storeAsFile=true');
+      
+      // Debug: mostrar archivos cuando cambia FilePond
+      pond.on('addfile', (error, file) => {
+        if (!error) {
+          console.log('File added to FilePond:', file.filename);
+        }
+      });
     }
   }
 
