@@ -1,0 +1,41 @@
+# Ignore Python cache
+__pycache__
+*.pyc
+
+# Ignore virtual environments
+venv
+env
+ENV
+
+# Ignore git
+.git
+
+# Ignore local files
+*.local
+*.log
+.env
+
+# Node modules
+node_modules
+
+# Build directories
+build
+dist
+
+# Ignore Dockerfile generated files
+Dockerfile
+
+# Ignore system files
+.DS_Store
+Thumbs.db
+
+# Django media and static
+media
+staticfiles
+
+# Ignore coverage and test reports
+htmlcov
+.coverage
+.pytest_cache
+
+# Add any other files/folders you don't want copied into the Docker image
