@@ -5,6 +5,7 @@ from django.core.exceptions import ValidationError
 from django.conf import settings
 
 from .models import UserProfile, MediaBlob
+from events.models import Category, UserInterest
 
 class SignUpForm(UserCreationForm):
     email = forms.EmailField(required=True)
@@ -47,3 +48,26 @@ class ProfileForm(forms.ModelForm):
         if commit:
             instance.save()
         return instance
+
+class UserInterestForm(forms.ModelForm):
+    """Formulario para gestionar los intereses del usuario"""
+    categories = forms.ModelMultipleChoiceField(
+        queryset=Category.objects.all(),
+        widget=forms.CheckboxSelectMultiple,
+        required=False,
+        label='Categorías de Interés'
+    )
+    
+    class Meta:
+        model = UserInterest
+        fields = ['categories', 'notify_new_events', 'notify_updates', 'notify_reminders']
+        labels = {
+            'notify_new_events': 'Notificarme cuando se publiquen nuevos eventos de mi interés',
+            'notify_updates': 'Notificarme cuando se actualicen eventos que sigo',
+            'notify_reminders': 'Recordatorios de eventos próximos',
+        }
+        widgets = {
+            'notify_new_events': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            'notify_updates': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            'notify_reminders': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+        }

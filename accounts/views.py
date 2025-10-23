@@ -11,8 +11,9 @@ from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.utils.encoding import force_bytes, force_str
 from django.views.decorators.http import require_http_methods
 
-from .forms import SignUpForm, ProfileForm
+from .forms import SignUpForm, ProfileForm, UserInterestForm
 from .models import UserProfile, MediaBlob
+from events.models import UserInterest
 
 # Simple email verification token using built-in PasswordResetTokenGenerator
 from django.contrib.auth.tokens import default_token_generator as token_generator
@@ -63,15 +64,27 @@ def verify_email(request, uidb64, token):
 @require_http_methods(["GET", "POST"])
 def profile(request):
     profile = request.user.userprofile
+    
+    # Get or create UserInterest
+    user_interest, created = UserInterest.objects.get_or_create(user=request.user)
+    
     if request.method == 'POST':
         form = ProfileForm(request.POST, request.FILES, instance=profile)
-        if form.is_valid():
+        interest_form = UserInterestForm(request.POST, instance=user_interest)
+        
+        if form.is_valid() and interest_form.is_valid():
             form.save()
-            messages.success(request, 'Perfil actualizado')
+            interest_form.save()
+            messages.success(request, 'Perfil e intereses actualizados')
             return redirect('accounts:profile')
     else:
         form = ProfileForm(instance=profile)
-    return render(request, 'accounts/profile.html', {'form': form})
+        interest_form = UserInterestForm(instance=user_interest)
+    
+    return render(request, 'accounts/profile.html', {
+        'form': form,
+        'interest_form': interest_form
+    })
 
 
 def blob_serve(request, pk):

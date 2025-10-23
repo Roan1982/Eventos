@@ -153,3 +153,45 @@ class Favorite(models.Model):
 
     def __str__(self):
         return f"{self.user.username} ❤ {self.event.title}"
+
+class UserInterest(models.Model):
+    """Modelo para guardar las categorías de interés del usuario"""
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='interests')
+    categories = models.ManyToManyField(Category, blank=True, related_name='interested_users')
+    notify_new_events = models.BooleanField(default=True, verbose_name='Notificar nuevos eventos')
+    notify_updates = models.BooleanField(default=True, verbose_name='Notificar actualizaciones')
+    notify_reminders = models.BooleanField(default=True, verbose_name='Notificar recordatorios')
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = 'Interés de Usuario'
+        verbose_name_plural = 'Intereses de Usuarios'
+
+    def __str__(self):
+        return f"Intereses de {self.user.username}"
+
+class Notification(models.Model):
+    """Modelo para notificaciones de usuarios"""
+    NOTIFICATION_TYPES = [
+        ('new_event', 'Nuevo Evento'),
+        ('event_update', 'Actualización de Evento'),
+        ('event_reminder', 'Recordatorio de Evento'),
+        ('event_canceled', 'Evento Cancelado'),
+    ]
+    
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='notifications')
+    event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name='notifications')
+    notification_type = models.CharField(max_length=20, choices=NOTIFICATION_TYPES)
+    title = models.CharField(max_length=200)
+    message = models.TextField()
+    is_read = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        verbose_name = 'Notificación'
+        verbose_name_plural = 'Notificaciones'
+
+    def __str__(self):
+        return f"{self.notification_type} para {self.user.username}: {self.title}"

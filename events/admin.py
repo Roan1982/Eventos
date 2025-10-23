@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Category, Tag, Event, MediaBlob, Review, ContactMessage, Favorite
+from .models import Category, Tag, Event, MediaBlob, Review, ContactMessage, Favorite, UserInterest, Notification
 
 @admin.register(Category)
 class CategoryAdmin(admin.ModelAdmin):
@@ -37,3 +37,25 @@ class FavoriteAdmin(admin.ModelAdmin):
     list_display = ('user', 'event', 'created_at')
     list_filter = ('created_at',)
     search_fields = ('user__username', 'event__title')
+
+@admin.register(UserInterest)
+class UserInterestAdmin(admin.ModelAdmin):
+    list_display = ('user', 'notify_new_events', 'notify_updates', 'notify_reminders', 'updated_at')
+    list_filter = ('notify_new_events', 'notify_updates', 'notify_reminders')
+    search_fields = ('user__username',)
+    filter_horizontal = ('categories',)
+
+@admin.register(Notification)
+class NotificationAdmin(admin.ModelAdmin):
+    list_display = ('user', 'notification_type', 'title', 'is_read', 'created_at')
+    list_filter = ('notification_type', 'is_read', 'created_at')
+    search_fields = ('user__username', 'title', 'message')
+    actions = ['mark_as_read', 'mark_as_unread']
+    
+    def mark_as_read(self, request, queryset):
+        queryset.update(is_read=True)
+    mark_as_read.short_description = "Marcar como leídas"
+    
+    def mark_as_unread(self, request, queryset):
+        queryset.update(is_read=False)
+    mark_as_unread.short_description = "Marcar como no leídas"

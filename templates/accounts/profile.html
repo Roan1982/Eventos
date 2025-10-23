@@ -147,6 +147,71 @@
         </div>
         {% endif %}
         
+        <!-- Intereses y Notificaciones -->
+        <div class="card shadow-sm mb-4">
+          <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">
+              <i class="fas fa-bell"></i> Intereses y Notificaciones
+            </h5>
+          </div>
+          <div class="card-body">
+            <p class="text-muted mb-3">
+              <i class="fas fa-info-circle"></i> 
+              Selecciona las categorías de eventos que te interesan para recibir notificaciones personalizadas.
+            </p>
+            
+            <div class="mb-4">
+              <label class="form-label fw-bold">
+                <i class="fas fa-tags"></i> Categorías de Interés
+              </label>
+              <div class="row">
+                {% for category in interest_form.categories %}
+                <div class="col-md-6 mb-2">
+                  <div class="form-check">
+                    {{ category.tag }}
+                    <label class="form-check-label" for="{{ category.id_for_label }}">
+                      {{ category.choice_label }}
+                    </label>
+                  </div>
+                </div>
+                {% endfor %}
+              </div>
+            </div>
+            
+            <hr class="my-4">
+            
+            <div class="mb-3">
+              <label class="form-label fw-bold">
+                <i class="fas fa-envelope"></i> Preferencias de Notificaciones
+              </label>
+              
+              <div class="form-check mb-2">
+                {{ interest_form.notify_new_events }}
+                <label class="form-check-label" for="id_notify_new_events">
+                  <i class="fas fa-calendar-plus text-success"></i> 
+                  Notificarme cuando se publiquen nuevos eventos de mis categorías favoritas
+                </label>
+              </div>
+              
+              <div class="form-check mb-2">
+                {{ interest_form.notify_updates }}
+                <label class="form-check-label" for="id_notify_updates">
+                  <i class="fas fa-sync text-info"></i> 
+                  Notificarme cuando se actualicen eventos favoritos
+                </label>
+              </div>
+              
+              <div class="form-check mb-2">
+                {{ interest_form.notify_reminders }}
+                <label class="form-check-label" for="id_notify_reminders">
+                  <i class="fas fa-clock text-warning"></i> 
+                  Enviarme recordatorios de eventos próximos
+                </label>
+              </div>
+            </div>
+          </div>
+        </div>
+        
         <!-- Botones -->
         <div class="d-flex gap-3 justify-content-between">
           <a href="{% url 'home' %}" class="btn btn-outline-secondary btn-lg">

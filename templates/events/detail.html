@@ -113,6 +113,11 @@
               Agregar a Favoritos
             {% endif %}
           </a>
+          <a href="{% url 'events:add_to_calendar' event.slug %}" 
+             class="btn btn-outline-light d-block"
+             title="Descargar evento para tu calendario">
+            <i class="fas fa-calendar-plus"></i> Agregar al Calendario
+          </a>
         </div>
         {% endif %}
       </div>

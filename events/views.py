@@ -7,9 +7,13 @@ from django.http import HttpResponse, Http404
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse_lazy
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView, TemplateView
+from datetime import datetime
+import pytz
 
-from .models import Event, Category, Tag, MediaBlob, Review, Favorite
+from .models import Event, Category, Tag, MediaBlob, Review, Favorite, UserInterest, Notification
 from .forms import EventForm, ReviewForm, ContactForm
+from django.contrib.admin.views.decorators import staff_member_required
+from django.utils.decorators import method_decorator
 
 class HomeView(TemplateView):
     template_name = 'home.html'
@@ -292,4 +296,102 @@ class FavoriteListView(LoginRequiredMixin, ListView):
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
         ctx['favorite_count'] = self.get_queryset().count()
+        return ctx
+
+# ===== Calendar Export =====
+def event_to_ics(request, slug):
+    """Generar archivo .ics para agregar evento al calendario"""
+    event = get_object_or_404(Event, slug=slug)
+    
+    # Formatear fechas al formato iCalendar (YYYYMMDDTHHMMSS)
+    def format_datetime(dt):
+        """Convierte datetime a formato iCalendar"""
+        if dt.tzinfo is None:
+            # Si no tiene timezone, asumimos UTC
+            dt = pytz.UTC.localize(dt)
+        return dt.strftime('%Y%m%dT%H%M%SZ')
+    
+    # Construir el contenido del archivo .ics
+    ics_content = f"""BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//ReJuntada//Eventos//ES
+CALSCALE:GREGORIAN
+METHOD:PUBLISH
+BEGIN:VEVENT
+UID:{event.id}@rejuntada.com
+DTSTAMP:{format_datetime(datetime.now(pytz.UTC))}
+DTSTART:{format_datetime(event.start_datetime)}
+DTEND:{format_datetime(event.end_datetime if event.end_datetime else event.start_datetime)}
+SUMMARY:{event.title}
+DESCRIPTION:{event.description[:500]}
+LOCATION:{event.venue_name or ''}{', ' + event.address if event.address else ''}, {event.city}
+URL:{request.build_absolute_uri(event.get_absolute_url())}
+STATUS:CONFIRMED
+SEQUENCE:0
+END:VEVENT
+END:VCALENDAR"""
+    
+    # Crear la respuesta HTTP
+    response = HttpResponse(ics_content, content_type='text/calendar; charset=utf-8')
+    response['Content-Disposition'] = f'attachment; filename="{event.slug}.ics"'
+    return response
+
+# ===== Admin Dashboard =====
+@method_decorator(staff_member_required, name='dispatch')
+class AdminDashboardView(TemplateView):
+    """Dashboard administrativo con estadísticas y reportes"""
+    template_name = 'events/admin_dashboard.html'
+    
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        from django.contrib.auth.models import User
+        from django.utils import timezone
+        from datetime import timedelta
+        
+        # Estadísticas generales
+        ctx['total_events'] = Event.objects.count()
+        ctx['published_events'] = Event.objects.filter(status='published').count()
+        ctx['pending_events'] = Event.objects.filter(status='draft').count()
+        ctx['total_users'] = User.objects.count()
+        ctx['total_reviews'] = Review.objects.count()
+        ctx['total_favorites'] = Favorite.objects.count()
+        ctx['total_notifications'] = Notification.objects.count()
+        ctx['unread_notifications'] = Notification.objects.filter(is_read=False).count()
+        
+        # Promedio de rating
+        ctx['avg_rating'] = Review.objects.aggregate(Avg('rating'))['rating__avg'] or 0
+        
+        # Eventos recientes (últimos 10)
+        ctx['recent_events'] = Event.objects.select_related(
+            'creator', 'category'
+        ).order_by('-created_at')[:10]
+        
+        # Eventos próximos
+        now = timezone.now()
+        ctx['upcoming_events'] = Event.objects.filter(
+            status='published',
+            start_datetime__gte=now
+        ).select_related('category').order_by('start_datetime')[:10]
+        
+        # Top categorías por número de eventos
+        ctx['top_categories'] = Category.objects.annotate(
+            event_count=Count('event')
+        ).filter(event_count__gt=0).order_by('-event_count')[:10]
+        
+        # Top eventos por vistas
+        ctx['top_viewed_events'] = Event.objects.filter(
+            status='published'
+        ).order_by('-view_count')[:10]
+        
+        # Reseñas recientes
+        ctx['recent_reviews'] = Review.objects.select_related(
+            'user', 'event'
+        ).order_by('-created_at')[:10]
+        
+        # Estadísticas de la última semana
+        week_ago = now - timedelta(days=7)
+        ctx['events_this_week'] = Event.objects.filter(created_at__gte=week_ago).count()
+        ctx['reviews_this_week'] = Review.objects.filter(created_at__gte=week_ago).count()
+        ctx['users_this_week'] = User.objects.filter(date_joined__gte=week_ago).count()
+        
         return ctx
