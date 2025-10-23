@@ -9,6 +9,6 @@ urlpatterns = [
     path('verify/<uidb64>/<token>/', views.verify_email, name='verify_email'),
     path('profile/', views.profile, name='profile'),
     path('blob/<int:pk>/', views.blob_serve, name='blob_serve'),
-    # Include Django auth URLs under the 'accounts' namespace so views can reverse as 'accounts:login'
-    path('', include(('django.contrib.auth.urls', 'accounts'), namespace='accounts')),
+    # Use built-in auth URLs (login/logout/password reset) at /accounts/
+    path('', include('django.contrib.auth.urls')),
 ]

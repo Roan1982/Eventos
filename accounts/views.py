@@ -38,7 +38,7 @@ def signup(request):
             })
             send_mail(subject, message, None, [user.email])
             messages.success(request, 'Revisa tu email para verificar la cuenta.')
-            return redirect('accounts:login')
+            return redirect('login')
     else:
         form = SignUpForm()
     return render(request, 'registration/signup.html', {'form': form})
@@ -54,7 +54,7 @@ def verify_email(request, uidb64, token):
         user.is_active = True
         user.save()
     messages.success(request, 'Cuenta verificada. Puedes iniciar sesión.')
-    return redirect('accounts:login')
+    return redirect('login')
     messages.error(request, 'Enlace inválido o expirado.')
     return redirect('home')
 

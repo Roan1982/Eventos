@@ -73,8 +73,6 @@ class EventTests(TestCase):
         u2 = User.objects.create_user('u2', 'u2@example.com', 'pass')
         Review.objects.create(user=self.user, event=e, rating=4)
         Review.objects.create(user=u2, event=e, rating=2)
-        avg = e.reviews.all().aggregate_avg if False else e.reviews.aggregate_avg if False else e.reviews.aggregate(avg=('rating',))
-        # Simpler: fetch through detail view context
-        c = Client()
-        resp = c.get(e.get_absolute_url())
-        self.assertContains(resp, 'Promedio')
+        from django.db.models import Avg
+        avg = e.reviews.aggregate(avg_rating=Avg('rating'))
+        self.assertAlmostEqual(avg['avg_rating'], 3.0)
