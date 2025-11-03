@@ -14,6 +14,9 @@ from .models import Event, Category, Tag, MediaBlob, Review, Favorite, UserInter
 from .forms import EventForm, ReviewForm, ContactForm
 from django.contrib.admin.views.decorators import staff_member_required
 from django.utils.decorators import method_decorator
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.auth.decorators import login_required
+from django.urls import reverse
 
 class HomeView(TemplateView):
     template_name = 'home.html'
@@ -395,3 +398,27 @@ class AdminDashboardView(TemplateView):
         ctx['users_this_week'] = User.objects.filter(date_joined__gte=week_ago).count()
         
         return ctx
+
+
+class NotificationListView(LoginRequiredMixin, ListView):
+    """List notifications for the logged-in user."""
+    model = Notification
+    template_name = 'events/notifications.html'
+    context_object_name = 'notifications'
+    paginate_by = 20
+
+    def get_queryset(self):
+        return Notification.objects.filter(user=self.request.user).order_by('-created_at')
+
+
+@login_required
+def mark_notification_read(request, pk):
+    try:
+        n = Notification.objects.get(pk=pk, user=request.user)
+        n.is_read = True
+        n.save()
+        messages.success(request, 'Notificación marcada como leída')
+    except Notification.DoesNotExist:
+        messages.error(request, 'Notificación no encontrada')
+    # redirect back to notifications list
+    return redirect(request.META.get('HTTP_REFERER', reverse('events:notificaciones')))

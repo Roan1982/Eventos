@@ -187,6 +187,8 @@ class Notification(models.Model):
     message = models.TextField()
     is_read = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
+    # Whether this notification has been delivered by email in a digest
+    email_sent = models.BooleanField(default=False)
 
     class Meta:
         ordering = ['-created_at']

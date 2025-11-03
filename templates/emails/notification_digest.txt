@@ -1,0 +1,12 @@
+Hola {{ user.username }},
+
+Tienes {{ notifications|length }} nueva(s) notificación(es):
+
+{% for n in notifications %}
+- {{ n.title }} ({{ n.notification_type }}) - {{ site_url }}{{ n.event.get_absolute_url }}
+{% endfor %}
+
+Accede a tu panel para verlas: {{ site_url }}
+
+Saludos,
+El equipo

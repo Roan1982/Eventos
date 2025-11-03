@@ -1,0 +1,13 @@
+<html>
+  <body>
+    <p>Hola {{ user.username }},</p>
+    <p>Tienes {{ notifications|length }} nueva(s) notificación(es):</p>
+    <ul>
+    {% for n in notifications %}
+      <li><strong>{{ n.title }}</strong> — <a href="{{ site_url }}{{ n.event.get_absolute_url }}">Ver evento</a></li>
+    {% endfor %}
+    </ul>
+    <p>Accede a tu panel para verlas.</p>
+    <p>Saludos,<br/>El equipo</p>
+  </body>
+</html>

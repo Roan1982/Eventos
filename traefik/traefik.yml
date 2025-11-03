@@ -1,0 +1,20 @@
+entryPoints:
+  web:
+    address: :80
+  websecure:
+    address: :443
+
+providers:
+  docker:
+    exposedByDefault: false
+
+api:
+  dashboard: false
+
+certificatesResolvers:
+  le:
+    acme:
+      email: "admin@mishosts.ddns.net"
+      storage: "/acme/acme.json"
+      httpChallenge:
+        entryPoint: web

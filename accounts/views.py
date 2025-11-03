@@ -54,10 +54,11 @@ def verify_email(request, uidb64, token):
     if user and token_generator.check_token(user, token):
         user.is_active = True
         user.save()
-    messages.success(request, 'Cuenta verificada. Puedes iniciar sesión.')
-    return redirect('accounts:login')
-    messages.error(request, 'Enlace inválido o expirado.')
-    return redirect('home')
+        messages.success(request, 'Cuenta verificada. Puedes iniciar sesión.')
+        return redirect('accounts:login')
+    else:
+        messages.error(request, 'Enlace inválido o expirado.')
+        return redirect('home')
 
 
 @login_required
