@@ -150,15 +150,16 @@ LOGIN_REDIRECT_URL = '/'  # Redirigir al home después del login
 LOGOUT_REDIRECT_URL = '/'
 
 # Security settings when DEBUG is False (production)
+# Security settings when DEBUG is False (production)
 if not DEBUG:
-    # Respect X-Forwarded-Proto header set by reverse proxy (Traefik)
+    # Respect X-Forwarded-Proto header set by reverse proxy (Traefik/Nginx)
     SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
-    SECURE_SSL_REDIRECT = os.environ.get('SECURE_SSL_REDIRECT', '1') not in ('0', 'False', 'false')
-    SESSION_COOKIE_SECURE = True
-    CSRF_COOKIE_SECURE = True
-    SECURE_HSTS_SECONDS = int(os.environ.get('SECURE_HSTS_SECONDS', '3600'))
-    SECURE_HSTS_INCLUDE_SUBDOMAINS = os.environ.get('SECURE_HSTS_INCLUDE_SUBDOMAINS', '1') not in ('0', 'False', 'false')
-    SECURE_HSTS_PRELOAD = os.environ.get('SECURE_HSTS_PRELOAD', '0') not in ('0', 'False', 'false')
-    # If you're behind a proxy that terminates TLS, set this to true
-    SESSION_COOKIE_SECURE = True
-    CSRF_COOKIE_SECURE = True
+    
+    # SSL/HTTPS redirection disabled by default unless explicitly set to True/1
+    SECURE_SSL_REDIRECT = os.environ.get('SECURE_SSL_REDIRECT', 'False').lower() in ('true', '1', 'yes')
+    SESSION_COOKIE_SECURE = os.environ.get('SESSION_COOKIE_SECURE', 'False').lower() in ('true', '1', 'yes')
+    CSRF_COOKIE_SECURE = os.environ.get('CSRF_COOKIE_SECURE', 'False').lower() in ('true', '1', 'yes')
+    
+    SECURE_HSTS_SECONDS = int(os.environ.get('SECURE_HSTS_SECONDS', '0'))
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = os.environ.get('SECURE_HSTS_INCLUDE_SUBDOMAINS', 'False').lower() in ('true', '1', 'yes')
+    SECURE_HSTS_PRELOAD = os.environ.get('SECURE_HSTS_PRELOAD', 'False').lower() in ('true', '1', 'yes')
